@@ -45,8 +45,6 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -76,6 +74,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
 }
 
 .dark {
@@ -121,6 +121,12 @@
   }
 
   a {
-    @apply text-blue-500 hover:text-blue-700;
+    @apply text-blue-500 hover:text-blue-700 dark:text-blue-200;
+  }
+}
+
+@layer components {
+  .btn-icon {
+    @apply transition-all active:scale-75 duration-100 border border-blue-300 rounded-full p-1 hover:ring-1 hover:ring-blue-500;
   }
 }
