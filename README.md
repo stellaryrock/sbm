@@ -1,2 +1,2 @@
 Social Book & Mark
-출처: https://github.com/indiflex/sbm.git`
+원본: https://github.com/indiflex/sbm.git
