@@ -45,9 +45,9 @@ export const {
   session: {
     strategy: "jwt",
   },
-  pages: {
-    signIn: "/sign",
-  },
+  // pages: {
+  //   signIn: "/sign",
+  // },
   trustHost: true,
   jwt: {
     maxAge: 30 * 60,

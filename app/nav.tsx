@@ -17,7 +17,7 @@ export default function Nav() {
       {didLogin ? (
         <Link href="/my">{session?.user?.name}</Link>
       ) : (
-        <Link href="/login">Login</Link>
+        <Link href="/sign">Login</Link>
       )}
     </div>
   );

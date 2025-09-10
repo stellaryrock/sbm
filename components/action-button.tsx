@@ -13,7 +13,7 @@ export function ActionButton({
   ...props
 }: PropsWithChildren<Props>) {
   return (
-    <Button onClick={() => serverAction()} {...props}>
+    <Button onClick={serverAction} {...props}>
       {children}
     </Button>
   );
