@@ -1,13 +1,10 @@
 "use server";
 
-import { signOut } from "@/lib/auth";
+import { signIn, signOut } from "@/lib/auth";
 
-export const logout = async () => await signOut({ redirectTo: "/" });
-export const login = async (formData: FormData) => {
-  const ent = Object.fromEntries(formData.entries());
+export type Provider = "google" | "github" | "naver" | "kakao";
 
-  const { email, password } = ent;
-
-  console.log("🚀 ~ login ~ password:", password);
-  console.log("🚀 ~ login ~ email:", email);
+export const login = async (provider: Provider, callback?: string) => {
+  await signIn(provider, { redirectTo: callback || "/bookcase" });
 };
+export const logout = async () => await signOut({ redirectTo: "/" });

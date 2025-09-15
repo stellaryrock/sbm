@@ -1,9 +1,9 @@
 "use client";
 
-import LabelInput from "@/components/label-input";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useReducer } from "react";
+import LabelInput from "../../components/label-input";
+import { Button } from "../../components/ui/button";
 
 export default function SignForm() {
   const [isSignin, toggleSign] = useReducer((pre) => !pre, false);

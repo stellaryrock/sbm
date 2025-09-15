@@ -1,7 +1,7 @@
-import { GithubLoginButton } from "./(sns-login-button)/error/github-login-button";
-import { GoogleLoginButton } from "./(sns-login-button)/error/google-login-button";
-import { KakaoLoginButton } from "./(sns-login-button)/error/kakao-login-button";
-import { NaverLoginButton } from "./(sns-login-button)/error/naver-login-button";
+import { GithubLoginButton } from "./github-login-button";
+import { GoogleLoginButton } from "./google-login-button";
+import { KakaoLoginButton } from "./kakao-login-button";
+import { NaverLoginButton } from "./naver-login-button";
 import SignForm from "./sign-form";
 
 export default function Sign() {
@@ -27,7 +27,19 @@ export default function Sign() {
           <SignForm />
         </div>
 
-        <div className="flex-1 bg-green-500 text-white">right</div>
+        <div className="flex flex-1 items-center bg-green-500 text-white">
+          <div className="flex flex-col">
+            <h2 className="text-2xl">Social BookMark</h2>
+            <h2 className="text-2xl">Record than Remember!</h2>
+            <p>
+              your go-to hub for sharing and discovering great and useful
+              websites. Connect with others, swap your favorite links, and
+              explore a world of useful resources - all powered by this
+              community.
+            </p>
+            <div className="flex"></div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -60,11 +60,15 @@ export const {
       return true;
     },
     jwt({ token, user }) {
+      if (user) {
+      }
       console.log("🚀 ~ jwt ~ user:", user);
       console.log("🚀 ~ jwt ~ token:", token);
       return token;
     },
     session({ session, token }) {
+      if (token) {
+      }
       console.log("🚀 ~ session ~ session:", session);
       console.log("🚀 ~ session ~ token:", token);
       return session;
