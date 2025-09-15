@@ -1,8 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { login } from "../sign.action";
 
 export function KakaoLoginButton() {
+  const makeLogin = async () => {
+    "use server";
+    await login("kakao");
+  };
+
   return (
     <Button
+      onClick={makeLogin}
       variant="outline"
       className="h-12 w-full gap-2 bg-[#FEE500] text-black hover:bg-[#ecd800]"
     >

@@ -1,9 +1,11 @@
 "use client";
 
+import { LoaderPinwheelIcon } from "lucide-react";
 import Link from "next/link";
-import { useReducer } from "react";
+import { useActionState, useReducer } from "react";
 import LabelInput from "../../components/label-input";
 import { Button } from "../../components/ui/button";
+import { authorize, regist } from "./sign.action";
 
 export default function SignForm() {
   const [isSignin, toggleSign] = useReducer((pre) => !pre, false);
@@ -19,13 +21,19 @@ export default function SignForm() {
 }
 
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
+  const [validError, makeLogin, isPending] = useActionState(
+    authorize,
+    undefined,
+  );
   return (
     <>
-      <form className="flex flex-col space-y-3">
+      <form action={makeLogin} className="flex flex-col space-y-3">
         <LabelInput
           label="email"
           type="email"
           name="email"
+          error={validError}
+          defaultValue={"jeonseongho@naver.com"}
           placeholder="email@bookmark.com"
         />
 
@@ -33,6 +41,8 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="password"
           type="password"
           name="passwd"
+          error={validError}
+          defaultValue={"121212"}
           placeholder="your password.."
           className="my-3x"
         />
@@ -47,11 +57,16 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
             Remember me
           </label>
 
-          <Link href="#">Forgot Password?</Link>
+          <Link href="/forgotpasswd">Forgot Password?</Link>
         </div>
 
-        <Button type="submit" variant={"primary"} className="w-full">
-          Sign In
+        <Button
+          type="submit"
+          variant={"primary"}
+          className="w-full"
+          disabled={isPending}
+        >
+          {isPending ? "Signing..." : "Sign In"}
         </Button>
       </form>
       <div className="mt-5 flex gap-10">
@@ -65,13 +80,17 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
 }
 
 function SignUp({ toggleSign }: { toggleSign: () => void }) {
+  const [validError, makeRegist, isPending] = useActionState(regist, undefined);
+
   return (
     <>
-      <form className="flex flex-col space-y-2">
+      <form action={makeRegist} className="flex flex-col space-y-2">
         <LabelInput
           label="email"
           type="email"
           name="email"
+          focus={true}
+          error={validError}
           placeholder="email@bookmark.com"
         />
 
@@ -79,6 +98,7 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           label="password"
           type="password"
           name="passwd"
+          error={validError}
           placeholder="your password.."
           className="my-3x"
         />
@@ -87,6 +107,7 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           label="password confirm"
           type="password"
           name="passwd2"
+          error={validError}
           placeholder="your password.."
           className="my-3x"
         />
@@ -95,12 +116,24 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           label="nickname"
           type="text"
           name="nickname"
+          error={validError}
           placeholder="your nickname.."
           className="my-3x"
         />
 
-        <Button type="submit" variant={"primary"} className="w-full">
-          Sign Up
+        <Button
+          type="submit"
+          variant={"primary"}
+          className="w-full"
+          disabled={isPending}
+        >
+          {isPending ? (
+            <>
+              <LoaderPinwheelIcon className="animate-spin" /> "Signing Up..."
+            </>
+          ) : (
+            "Sign Up"
+          )}
         </Button>
       </form>
       <div className="mt-5 flex gap-10">

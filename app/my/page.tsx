@@ -1,5 +1,5 @@
-import SignOutButton from "@/components/signout-button";
 import Link from "next/link";
+import SignOutButton from "../../components/signout-button";
 
 export default function My() {
   return (

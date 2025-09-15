@@ -1,8 +1,12 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { login } from "../sign.action";
 
 export function GoogleLoginButton() {
   return (
     <Button
+      onClick={() => login("google")}
       variant="outline"
       className="h-12 w-full gap-2 rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
     >

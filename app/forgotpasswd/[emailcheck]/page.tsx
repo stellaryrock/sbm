@@ -2,7 +2,6 @@ import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/db";
 
-// /forgotpasswd/ADFF-SADF-sadf/
 export default async function ResetForgotPasswd({
   params,
 }: {
@@ -15,6 +14,7 @@ export default async function ResetForgotPasswd({
     select: { nickname: true, emailcheck: true, email: true },
     where: { emailcheck },
   });
+
   // compare emailcheck and db's emailcheck
   // TODO: compare emailcheck!!(by crypto)
   // if (!mbr) return <h1>Error</h1>;
@@ -47,7 +47,7 @@ export default async function ResetForgotPasswd({
           />
 
           <Button type="submit" variant={"destructive"} className="my-5 w-full">
-            Chagen Password
+            Change Password
           </Button>
         </form>
       </div>

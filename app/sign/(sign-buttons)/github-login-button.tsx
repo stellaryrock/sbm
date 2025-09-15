@@ -1,8 +1,17 @@
+"use client";
 import { Button } from "@/components/ui/button";
+import { login } from "../sign.action";
 
 export function GithubLoginButton() {
+  const makeLogin = async () => {
+    await login("github");
+  };
+
   return (
-    <Button className="h-12 w-full gap-2 rounded-md bg-[#181717] text-white hover:bg-black">
+    <Button
+      onClick={makeLogin}
+      className="h-12 w-full gap-2 rounded-md bg-[#181717] text-white hover:bg-black"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-6 w-6"

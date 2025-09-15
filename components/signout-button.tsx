@@ -11,7 +11,7 @@ export default function SignOutButton() {
 
   return (
     <form action={logout}>
-      <Button variant={"success"}>Sign Out {session.data?.user?.name}</Button>
+      <Button variant={"success"}>Sign Out</Button>
     </form>
   );
 }
