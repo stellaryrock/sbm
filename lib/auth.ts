@@ -4,6 +4,7 @@ import Github from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import Kakao from "next-auth/providers/kakao";
 import Naver from "next-auth/providers/naver";
+import { findMemberByEmail } from "../app/sign/sign.action";
 import prisma from "./db";
 
 export const {
@@ -30,15 +31,16 @@ export const {
     }),
   ],
   callbacks: {
-    async signIn({ user, profile, account }) {
+    async signIn({ user, account }) {
+      console.log("🚀 ~ signIn ~ user:", user);
       const isCredential = account?.provider === "credentials";
-      console.log("🚀 ~ isCredential:", isCredential);
-      console.log("🚀 ~ profile:", profile);
-      console.log("🚀 ~ user:", user);
+
       const { email, name: nickname, image } = user;
       if (!email) return false;
 
-      const mbr = await prisma.member.findUnique({ where: { email } });
+      const mbr = await findMemberByEmail(email, isCredential);
+      if (mbr?.emailcheck) return `/sign/error?error=CheckEmail`;
+
       console.log("🚀 ~ mbr:", mbr);
       if (isCredential) {
         if (!mbr) throw new AuthError("NotExistsMember");

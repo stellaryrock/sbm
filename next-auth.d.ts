@@ -3,6 +3,8 @@ import type { DefaultSession } from "next-auth";
 declare module "next-auth" {
   interface User {
     isadmin?: boolean;
+    nickname?: string;
+    passwd: string;
     outdt?: string;
     descript?: string;
   }
@@ -10,6 +12,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       //isadmin?: boolean;
+      nickname: string;
     } & DefaultSession["user"];
   }
 }

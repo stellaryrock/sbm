@@ -8,6 +8,10 @@ import { BookImages, MarkImages, PeopleImages } from "./images";
 import SignForm from "./sign-form";
 import SoMany from "./so-many";
 
+/*
+export const runtime = "edge";
+*/
+
 export default function Sign() {
   return (
     <div className="grid h-full place-items-center">

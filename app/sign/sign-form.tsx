@@ -2,6 +2,7 @@
 
 import { LoaderPinwheelIcon } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useActionState, useReducer } from "react";
 import LabelInput from "../../components/label-input";
 import { Button } from "../../components/ui/button";
@@ -21,6 +22,9 @@ export default function SignForm() {
 }
 
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+
   const [validError, makeLogin, isPending] = useActionState(
     authorize,
     undefined,
@@ -33,7 +37,8 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           type="email"
           name="email"
           error={validError}
-          defaultValue={"jeonseongho@naver.com"}
+          focus={!email}
+          defaultValue={email ?? ""}
           placeholder="email@bookmark.com"
         />
 
@@ -41,6 +46,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="password"
           type="password"
           name="passwd"
+          focus={!!email}
           error={validError}
           defaultValue={"121212"}
           placeholder="your password.."
@@ -81,7 +87,6 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
 
 function SignUp({ toggleSign }: { toggleSign: () => void }) {
   const [validError, makeRegist, isPending] = useActionState(regist, undefined);
-
   return (
     <>
       <form action={makeRegist} className="flex flex-col space-y-2">
