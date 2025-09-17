@@ -1,15 +1,13 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { login } from "../sign.action";
+import { useLogin } from "./login-hook";
 
 export function GithubLoginButton() {
-  const makeLogin = async () => {
-    await login("github");
-  };
+  const makeLogin = useLogin();
 
   return (
     <Button
-      onClick={makeLogin}
+      onClick={() => makeLogin("github")}
       className="h-12 w-full gap-2 rounded-md bg-[#181717] text-white hover:bg-black"
     >
       <svg

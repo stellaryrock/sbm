@@ -1,10 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { loginNaver } from "../sign.action";
 
-export function NaverLoginButton() {
+type Props = {
+  redirectTo: string;
+};
+
+export function NaverLoginButton({ redirectTo }: Props) {
+  const makeNaverLogin = async () => {
+    "use server";
+    loginNaver(redirectTo);
+  };
+
   return (
     <Button
-      onClick={loginNaver}
+      onClick={makeNaverLogin}
       variant="outline"
       className="h-12 w-full gap-2 bg-[#03C75A] text-white hover:bg-[#02b155]"
     >

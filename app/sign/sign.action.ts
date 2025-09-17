@@ -9,7 +9,7 @@ import { newToken } from "../../lib/utils";
 import { type ValidError, validate } from "../../lib/validator";
 import { sendRegistCheck } from "./mail.action";
 
-type Provider = "google" | "github" | "naver" | "kakao";
+export type Provider = "google" | "github" | "naver" | "kakao";
 
 export const login = async (provider: Provider, callback?: string) => {
   await signIn(provider, { redirectTo: callback || "/bookcase" });
@@ -19,7 +19,8 @@ export const logout = async () => {
   await signOut({ redirectTo: "/sign" }); // QQQ: '/'
 };
 
-export const loginNaver = async () => login("naver");
+export const loginNaver = async (redirectTo?: string) =>
+  login("naver", redirectTo);
 
 // credential login (email, passwd)
 export const authorize = async (
@@ -34,9 +35,11 @@ export const authorize = async (
   if (err) return err;
 
   try {
+    const redirectTo = formData.get("redirectTo")?.toString() || "/bookcase";
+
     await signIn("credentials", {
       ...data,
-      redirectTo: "/bookcase",
+      redirectTo,
     });
   } catch (error) {
     console.log("🚀 ~ sign.action > authorize, error:", error);
@@ -91,6 +94,7 @@ export const findMemberByEmail = async (
       nickname: true,
       isadmin: true,
       emailcheck: true,
+      outdt: true,
       passwd,
     },
     where: { email },

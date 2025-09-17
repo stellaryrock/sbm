@@ -1,19 +1,16 @@
 import type { DefaultSession } from "next-auth";
+import "next-auth/jwt";
 
 declare module "next-auth" {
-  interface User {
-    isadmin?: boolean;
-    nickname?: string;
-    passwd: string;
-    outdt?: string;
-    descript?: string;
-  }
-
   interface Session {
     user: {
-      //isadmin?: boolean;
-      nickname: string;
+      isadmin?: boolean;
     } & DefaultSession["user"];
+  }
+
+  interface User {
+    passwd?: string;
+    isadmin?: boolean;
   }
 }
 

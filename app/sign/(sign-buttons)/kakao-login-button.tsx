@@ -1,10 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { login } from "../sign.action";
 
-export function KakaoLoginButton() {
+type Props = {
+  redirectTo: string;
+};
+
+export function KakaoLoginButton({ redirectTo }: Props) {
   const makeLogin = async () => {
     "use server";
-    await login("kakao");
+    await login("kakao", redirectTo);
   };
 
   return (
