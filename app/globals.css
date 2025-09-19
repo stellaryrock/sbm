@@ -131,6 +131,6 @@
 
 @layer components {
   .btn-icon {
-    @apply transition-all active:scale-75 duration-100 border border-blue-300 rounded-full p-1 hover:ring-1 hover:ring-blue-500;
+    @apply transition-all active:scale-75 duration-100 border overflow-hidden border-blue-300 rounded-full p-1 hover:ring-1 hover:ring-blue-500;
   }
 }

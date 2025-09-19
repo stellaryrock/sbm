@@ -25,9 +25,10 @@
           "options": {}
         }
       },
-      "a11y": {
-        "useButtonType": "off"
-      }
+      "suspicious": {
+        "noUnknownAtRules": "off"
+      },
+      "a11y": { "useButtonType": "off" }
     },
     "domains": {
       "next": "recommended",
@@ -37,7 +38,7 @@
   "assist": {
     "actions": {
       "source": {
-        "organizeImports": "on"
+        "organizeImports": "off"
       }
     }
   }

@@ -1,4 +1,5 @@
 "use server";
+
 import { createTransport } from "nodemailer";
 
 type Attachments = {
@@ -20,7 +21,7 @@ const TRANS = createTransport({
   auth: { user, pass },
 });
 
-const FROM = `"BookMark" <${user}>`;
+const FROM = `"BookMark" ${user}`;
 
 export const sendRegistCheck = async (to: string, authKey: string) => {
   const subject = "[BookMark] Regist Authentication Mail";
@@ -34,7 +35,7 @@ export const sendRegistCheck = async (to: string, authKey: string) => {
     </div>
   `;
 
-  sendMail(to, subject, html);
+  return sendMail(to, subject, html);
 };
 
 export const sendPasswordReset = async (
@@ -54,7 +55,7 @@ export const sendPasswordReset = async (
     </div>
   `;
 
-  sendMail(to, subject, html);
+  return sendMail(to, subject, html);
 };
 
 const sendMail = async (
@@ -62,7 +63,7 @@ const sendMail = async (
   subject: string,
   html: string,
   attachments?: Attachments,
-) => {
+) =>
   TRANS.sendMail({
     from: FROM,
     to,
@@ -71,4 +72,3 @@ const sendMail = async (
     html,
     attachments,
   });
-};

@@ -19,6 +19,7 @@ export default function Nav() {
       {didLogin ? (
         <Link href="/my">
           <Image
+            className="rounded-full"
             src={session?.user?.image ?? DummyProfile}
             alt={session?.user.name || "guest"}
             width={30}
