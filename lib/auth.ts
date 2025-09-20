@@ -43,7 +43,7 @@ export const {
       const mbr = await findMemberByEmail(email, isCredential);
       console.log("🚀 ~ mbr:", mbr);
       if (mbr?.emailcheck) {
-        return `/sign/error?error=CheckEmail&email=${email}&emailcheck=${mbr.emailcheck}`;
+        return `/sign/error?error=CheckEmail&email=${email}&emailcheck=${mbr.emailcheck}&emailType=${mbr.emailType}`;
       }
 
       if (isCredential) {
@@ -68,7 +68,7 @@ export const {
     },
 
     async jwt({ token, user, trigger, account, session }) {
-      console.log("🚀 ~ account:", account);
+      
       const userData = trigger === "update" ? session : user;
       if (userData) {
         token.id = userData.id;
@@ -76,6 +76,15 @@ export const {
         token.name = userData.name || userData.nickname;
         token.image = userData.image;
         token.isadmin = userData.isadmin;
+
+        if (account) {
+          console.log("🚀 ~ jwt ~ account:", account)
+          
+          token.accessToken = account?.access_token;
+          token.accessTokenExpires =
+            Date.now() + (account.expires_in ?? 0) * 1000;
+          token.refreshToken = account.refresh_token;
+        }
       }
       return token;
     },

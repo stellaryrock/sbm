@@ -98,17 +98,18 @@ export const regist = async (
 
   const passwd = await hash(orgPasswd, 10);
   const emailcheck = newToken();
+  const emailType = 'regist';
   const newMbr = await prisma.member.create({
-    data: { email, nickname, passwd, emailcheck },
+    data: { email, nickname, passwd, emailcheck, emailType },
   });
   console.log("🚀 ~ regist ~ newMbr:", newMbr);
 
-  const rs = await sendmailByFetch({ email, emailcheck });
+  const rs = await sendmailByFetch({ email, emailcheck, emailType });
   console.log("🚀 ~ regist ~ rs:", rs);
 
   if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
-  redirect(`/sign/error?error=CheckEmail&email=${email}`);
+  redirect(`/sign/error?error=CheckEmail&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`);
 };
 
 export const sendResetPassword = async (
@@ -122,23 +123,24 @@ export const sendResetPassword = async (
   if (err) return err;
 
   const emailcheck = newToken();
+  const emailType = 'reset-password';
   const { email } = data;
   const { nickname } = await prisma.member.update({
     select: { nickname: true },
     where: { email },
-    data: { emailcheck },
+    data: { emailcheck, emailType },
   });
 
   const rs = await sendmailByFetch({
     email,
     emailcheck,
     nickname,
-    emailType: "reset-password",
+    emailType,
   });
 
   if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
-  redirect(`/sign/error?error=CheckEmail&email=${email}`);
+  redirect(`/sign/error?error=CheckEmail&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`);
 };
 
 export const resendRegist = async (
@@ -148,11 +150,12 @@ export const resendRegist = async (
   const zobj = z.object({
     email: z.email(),
     emailcheck: z.uuidv4(),
-  });
+    emailType: z.enum(["regist", "reset-password"]).optional(),
+  })
   const [err, data] = validate(zobj, formData);
   if (err) return err;
 
-  const { email, emailcheck } = data;
+  const { email, emailcheck, emailType } = data;
   const mbr = await findMemberByEmail(email);
   if (!mbr || mbr.emailcheck !== emailcheck) {
     redirect("/sign/error?error=EmailSendFail");
@@ -161,12 +164,14 @@ export const resendRegist = async (
   const newEmailCheck = newToken();
   await prisma.member.update({
     where: { email },
-    data: { emailcheck: newEmailCheck },
+    data: { emailcheck: newEmailCheck, emailType },
   });
 
   const rs = await sendmailByFetch({
     email,
     emailcheck: newEmailCheck,
+    emailType,
+    nickname: mbr.nickname
   });
   if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
@@ -200,6 +205,7 @@ export const findMemberByEmail = async (
       nickname: true,
       isadmin: true,
       emailcheck: true,
+      emailType: true,
       outdt: true,
       passwd,
     },

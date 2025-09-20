@@ -17,7 +17,7 @@ export default async function RegistCheck({ params, searchParams }: Props) {
 
   await prisma.member.update({
     where: { email },
-    data: { emailcheck: null },
+    data: { emailcheck: null, emailType: null },
   });
 
   redirect(`/sign?email=${email}`);

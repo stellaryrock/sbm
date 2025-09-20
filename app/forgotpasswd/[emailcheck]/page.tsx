@@ -19,7 +19,10 @@ export default async function ResetForgotPasswd({
   if (emailcheck !== mbr?.emailcheck)
     redirect("/sign/error?error=InvalidEmailCheck");
 
-  async function resetPassword(_: ValidError | undefined, formData: FormData) {
+  const resetPassword = async (
+    _: ValidError | undefined,
+    formData: FormData,
+  ) => {
     "use server";
     const zobj = z
       .object({
@@ -38,11 +41,11 @@ export default async function ResetForgotPasswd({
     const passwd = await hash(data.passwd, 10);
     await prisma.member.update({
       where: { email: mbr?.email },
-      data: { passwd, emailcheck: null },
+      data: { passwd, emailcheck: null, emailType: null },
     });
 
     redirect(`/sign?email=${mbr?.email}`);
-  }
+  };
 
   return (
     <div className="grid h-full place-items-center">

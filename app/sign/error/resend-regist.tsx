@@ -7,9 +7,10 @@ import { resendRegist } from "../sign.action";
 type Props = {
   email: string;
   emailcheck: string;
+  emailType?: "regist" | "reset-password";
 };
 
-export default function ResendRegist({ email, emailcheck }: Props) {
+export default function ResendRegist({ email, emailcheck, emailType }: Props) {
   const [validError, sendResetMail, isPending] = useActionState(
     resendRegist,
     undefined,
@@ -18,6 +19,7 @@ export default function ResendRegist({ email, emailcheck }: Props) {
   const send = (formData: FormData) => {
     formData.set("email", email);
     formData.set("emailcheck", emailcheck);
+    formData.set("emailType", emailType as string);
 
     sendResetMail(formData);
   };

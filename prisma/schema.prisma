@@ -79,6 +79,7 @@ model Member {
   image      String?      @db.VarChar(255)
   isadmin    Boolean      @default(false)
   emailcheck String?      @db.VarChar(256)
+  emailType  String?      @db.VarChar(21)
   outdt      String?      @db.VarChar(10)
   descript   String?      @db.VarChar(512)
   Book       Book[]
