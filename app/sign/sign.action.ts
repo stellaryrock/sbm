@@ -98,7 +98,7 @@ export const regist = async (
 
   const passwd = await hash(orgPasswd, 10);
   const emailcheck = newToken();
-  const emailType = 'regist';
+  const emailType = "regist";
   const newMbr = await prisma.member.create({
     data: { email, nickname, passwd, emailcheck, emailType },
   });
@@ -109,7 +109,9 @@ export const regist = async (
 
   if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
-  redirect(`/sign/error?error=CheckEmail&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`);
+  redirect(
+    `/sign/error?error=CheckEmail&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`,
+  );
 };
 
 export const sendResetPassword = async (
@@ -123,7 +125,7 @@ export const sendResetPassword = async (
   if (err) return err;
 
   const emailcheck = newToken();
-  const emailType = 'reset-password';
+  const emailType = "reset-password";
   const { email } = data;
   const { nickname } = await prisma.member.update({
     select: { nickname: true },
@@ -140,7 +142,38 @@ export const sendResetPassword = async (
 
   if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
-  redirect(`/sign/error?error=CheckEmail&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`);
+  redirect(
+    `/sign/error?error=CheckEmail&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`,
+  );
+};
+
+export const resetPassword = async (
+  _: ValidError | undefined,
+  formData: FormData,
+) => {
+  const zobj = z
+    .object({
+      email: z.email(),
+      emailcheck: z.uuidv4(),
+      passwd: z.string().min(6),
+      passwd2: z.string().min(6),
+    })
+    .refine(({ passwd, passwd2 }) => passwd === passwd2, {
+      path: ["passwd2"],
+      message: "Not Match Passoword and Password confirm!",
+    });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const { email, passwd2, emailcheck } = data;
+  const passwd = await hash(passwd2, 10);
+  await prisma.member.update({
+    where: { email, emailcheck },
+    data: { passwd, emailcheck: null, emailType: null },
+  });
+
+  redirect(`/sign/error?error=Your password changed.`);
 };
 
 export const resendRegist = async (
@@ -151,7 +184,7 @@ export const resendRegist = async (
     email: z.email(),
     emailcheck: z.uuidv4(),
     emailType: z.enum(["regist", "reset-password"]).optional(),
-  })
+  });
   const [err, data] = validate(zobj, formData);
   if (err) return err;
 
@@ -171,7 +204,7 @@ export const resendRegist = async (
     email,
     emailcheck: newEmailCheck,
     emailType,
-    nickname: mbr.nickname
+    nickname: mbr.nickname,
   });
   if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
@@ -205,15 +238,28 @@ export const findMemberByEmail = async (
       nickname: true,
       isadmin: true,
       emailcheck: true,
-      emailType: true,
+      image: true,
       outdt: true,
+      emailType: true,
       passwd,
     },
     where: { email },
   });
 
-export const findMemberByEmailcheck = async (emailcheck: string) =>
+export const findMemberByEmailcheck = async (
+  emailcheck: string,
+  passwd: boolean = false,
+) =>
   prisma.member.findFirst({
-    select: { nickname: true, emailcheck: true, email: true },
+    select: {
+      id: true,
+      nickname: true,
+      isadmin: true,
+      emailcheck: true,
+      emailType: true,
+      image: true,
+      outdt: true,
+      passwd,
+    },
     where: { emailcheck },
   });

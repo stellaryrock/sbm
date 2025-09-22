@@ -21,11 +21,21 @@ export default function SignForm() {
   );
 }
 
+const storeEmail = (email: string | null) =>
+  email === null
+    ? localStorage.removeItem("SBM_LOCAL_EMAIL")
+    : localStorage.setItem("SBM_LOCAL_EMAIL", email);
+
+const readEmail = () => localStorage.getItem("SBM_LOCAL_EMAIL");
+
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const redirectTo = searchParams.get("redirectTo");
+
+  const emailRef = useRef<HTMLInputElement>(null);
   const passwdRef = useRef<HTMLInputElement>(null);
+  const rememberRef = useRef<HTMLInputElement>(null);
 
   const [validError, makeLogin, isPending] = useActionState(
     authorize,
@@ -33,12 +43,24 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   );
 
   const makeLoginAction = (formData: FormData) => {
+    rememberMe();
+
     if (redirectTo) formData.set("redirectTo", redirectTo);
     makeLogin(formData);
   };
 
+  const rememberMe = () => {
+    if (rememberRef.current?.checked && emailRef.current?.value)
+      storeEmail(emailRef.current.value);
+    else storeEmail(null);
+  };
+
   useEffect(() => {
-    if (email) {
+    const storedEmail = readEmail();
+    if (rememberRef.current) rememberRef.current.checked = !!storedEmail;
+    if (emailRef.current && storedEmail) emailRef.current.value = storedEmail;
+
+    if (email || storedEmail) {
       passwdRef.current?.focus();
     }
   }, [email]);
@@ -50,9 +72,10 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="email"
           type="email"
           name="email"
+          focus={true}
+          ref={emailRef}
           error={validError}
-          focus={!email}
-          defaultValue={email ?? ""}
+          defaultValue={email || ""}
           placeholder="email@bookmark.com"
         />
 
@@ -60,12 +83,9 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="password"
           type="password"
           name="passwd"
-          focus={!!email}
-          error={validError}
           ref={passwdRef}
-          defaultValue={"121212"}
+          error={validError}
           placeholder="your password.."
-          className="my-3x"
         />
 
         <div className="flex justify-between">
@@ -73,6 +93,8 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
             <input
               type="checkbox"
               id="remember"
+              ref={rememberRef}
+              onChange={rememberMe}
               className="mr-1 translate-y-[1px]"
             />
             Remember me

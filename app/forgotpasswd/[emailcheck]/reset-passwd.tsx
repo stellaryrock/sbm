@@ -1,42 +1,51 @@
 "use client";
 
+import { resetPassword } from "@/app/sign/sign.action";
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
-import type { ValidError } from "@/lib/validator";
 import { useActionState } from "react";
+
 type Props = {
-  action: (
-    _: ValidError | undefined,
-    formData: FormData,
-  ) => Promise<ValidError | undefined>;
+  email: string;
+  emailcheck: string;
 };
 
-export default function ResetPasswordForm({ action }: Props) {
-  const [validError, makeAction, isPending] = useActionState(action, undefined);
+export default function ResetPasswd({ email, emailcheck }: Props) {
+  const [validError, resetPasswordAction, isPending] = useActionState(
+    resetPassword,
+    undefined,
+  );
+
+  const sendAction = async (formData: FormData) => {
+    formData.set("email", email);
+    formData.set("emailcheck", emailcheck);
+    resetPasswordAction(formData);
+  };
+
   return (
-    <form action={makeAction}>
+    <form action={sendAction} className="">
       <LabelInput
         label="new password"
         name="passwd"
         type="password"
-        error={validError}
         focus={true}
+        error={validError}
         placeholder="new password..."
       />
       <LabelInput
         label="new password confirm"
         name="passwd2"
-        error={validError}
         type="password"
+        error={validError}
         placeholder="new password confirm..."
         className="mt-5"
       />
 
       <Button
         type="submit"
-        disabled={isPending}
         variant={"destructive"}
         className="my-5 w-full"
+        disabled={isPending}
       >
         Change Password
       </Button>
