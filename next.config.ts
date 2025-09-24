@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       // {hostname: '*.googleusercontent.com', protocol: 'https', port: 503},
       { hostname: "*.googleusercontent.com" },
-      { hostname: "avatar.githubusercontent.com" },
+      { hostname: "*.githubusercontent.com" },
       { hostname: "*.pstatic.net" },
       { hostname: "*.kakaocdn.net" },
       { hostname: "sbm.topician.com" },

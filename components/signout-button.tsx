@@ -1,17 +1,20 @@
 "use client";
 
+import { LogOutIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { logout } from "../app/sign/sign.action";
 import { Button } from "./ui/button";
 
-export default function SignOutButton() {
+export default function SignOutButton({ name }: { name: string }) {
   const session = useSession();
   if (!session?.data?.user) redirect("/");
 
   return (
     <form action={logout}>
-      <Button variant={"success"}>Sign Out</Button>
+      <Button variant={"success"}>
+        <LogOutIcon /> Sign Out
+      </Button>
     </form>
   );
 }

@@ -83,7 +83,7 @@ export const {
 
         if (account) {
           console.log("🚀 ~ jwt ~ account:", account);
-
+          // accesstoken, id_token (jwt)
           token.accessToken = account?.access_token;
           token.accessTokenExpires =
             Date.now() + (account.expires_in ?? 0) * 1000;

@@ -2,7 +2,7 @@
 
 import { LoaderPinwheelIcon } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useReducer, useRef } from "react";
 import LabelInput from "../../components/label-input";
 import { Button } from "../../components/ui/button";
@@ -32,6 +32,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const redirectTo = searchParams.get("redirectTo");
+  const router = useRouter();
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwdRef = useRef<HTMLInputElement>(null);
@@ -42,11 +43,12 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
     undefined,
   );
 
-  const makeLoginAction = (formData: FormData) => {
+  const makeLoginAction = async (formData: FormData) => {
     rememberMe();
 
     if (redirectTo) formData.set("redirectTo", redirectTo);
-    makeLogin(formData);
+    await makeLogin(formData);
+    router.refresh();
   };
 
   const rememberMe = () => {

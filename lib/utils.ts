@@ -8,6 +8,16 @@ export function cn(...inputs: ClassValue[]) {
 
 export const newToken = () => v4();
 
+export const uniqueNumId = (cnt = 5) =>
+  Math.random()
+    .toString(10)
+    .substring(2, 2 + cnt);
+
+export const uniqueId = (cnt = 5) =>
+  Math.random()
+    .toString(10)
+    .substring(2, 2 + cnt);
+
 export const DynamicCsses = [
   "translate-x-[-20px]",
   "translate-x-[-40px]",

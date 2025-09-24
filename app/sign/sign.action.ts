@@ -1,12 +1,15 @@
 "use server";
 
-import { signIn, signOut } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { newToken } from "@/lib/utils";
+import { newToken, uniqueId } from "@/lib/utils";
 import { validate, type ValidError } from "@/lib/validator";
 import { hash } from "bcryptjs";
+import { existsSync } from "fs";
+import { writeFile } from "fs/promises";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
+import path from "path";
 import z from "zod";
 import type { SendMailBody } from "../api/sendmail/route";
 
@@ -99,13 +102,12 @@ export const regist = async (
   const passwd = await hash(orgPasswd, 10);
   const emailcheck = newToken();
   const emailType = "regist";
-  const newMbr = await prisma.member.create({
+
+  await prisma.member.create({
     data: { email, nickname, passwd, emailcheck, emailType },
   });
-  console.log("🚀 ~ regist ~ newMbr:", newMbr);
 
   const rs = await sendmailByFetch({ email, emailcheck, emailType });
-  console.log("🚀 ~ regist ~ rs:", rs);
 
   if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
@@ -197,7 +199,7 @@ export const resendRegist = async (
   const newEmailCheck = newToken();
   await prisma.member.update({
     where: { email },
-    data: { emailcheck: newEmailCheck, emailType },
+    data: { emailcheck: newEmailCheck },
   });
 
   const rs = await sendmailByFetch({
@@ -263,3 +265,39 @@ export const findMemberByEmailcheck = async (
     },
     where: { emailcheck },
   });
+
+export const updateProfileImage = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session?.user.email) throw new Error("Need Login!");
+  const { id, email } = session.user;
+
+  const ent = Object.fromEntries(formData.entries());
+  console.log("🚀 ~ updateProfileImage ~ ent:", ent);
+
+  const zobj = z.object({
+    image: z
+      .instanceof(File)
+      .refine((file) => file.size <= 10 * 1024 * 1024, "Under 10MB!")
+      .refine((file) => file.type.startsWith("image/"), "Upload Image only!"),
+  });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return [err];
+
+  const uploadDir = path.join(`${process.cwd()}`, "public", "profiles");
+  if (existsSync(uploadDir)) path.join(process.cwd(), "public", "profiles");
+
+  const fileName = `${id}_${uniqueId()}_${data.image.name}`;
+  const filePath = path.join(uploadDir, fileName);
+
+  const buffer = Buffer.from(await data.image.arrayBuffer());
+  await writeFile(filePath, buffer);
+  const image = `profiles/${fileName}`;
+
+  const mbr = await prisma.member.update({
+    where: { email },
+    data: { image },
+  });
+
+  return [null, mbr];
+};

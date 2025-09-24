@@ -14,14 +14,10 @@ import { Input } from "./ui/input";
 
 type Props = {
   label: string;
-  type?: string;
   name?: string;
   ref?: RefObject<HTMLInputElement | null>;
   focus?: boolean;
-  defaultValue?: string | number;
   error?: ValidError;
-  placeholder?: string;
-  className?: string;
   inputClassName?: string;
 };
 
@@ -63,7 +59,7 @@ export default function LabelInput({
           id={uniqName}
           name={name || uniqName}
           ref={ref || inpRef}
-          defaultValue={val || defaultValue}
+          defaultValue={val || defaultValue || ""}
           placeholder={placeholder || ""}
           className={cn(
             "bg-gray-100 font-normal focus:bg-white",
