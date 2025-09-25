@@ -91,11 +91,11 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
       }}
       onDrop={dropFile}
       className={cn(
-        "relative aspect-square w-full overflow-hidden rounded-full border-2 shadow-sm",
+        "relative mx-auto aspect-square w-full max-w-96 overflow-hidden rounded-full border-2 shadow-sm",
         { "border-blue-500 border-dotted": isDragging },
       )}
     >
-      <form onSubmit={submitHandler} ref={formRef}>
+      <form onSubmit={submitHandler} className="" ref={formRef}>
         <Img
           src={img || DummyProfile.src}
           alt={alt}

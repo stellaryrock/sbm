@@ -12,12 +12,18 @@ export default function ChangeProfile() {
   const [diffPassword, setDiffPassword] = useState(false);
   const [diffNickname, setDiffNickname] = useState(false);
 
+  const resetHandler = () => {
+    setDiffEmail(false);
+    setDiffPassword(false);
+    setDiffNickname(false);
+  };
+
   return (
-    <form className="space-y-3 text-left">
+    <form onReset={resetHandler} className="space-y-3 text-left">
       <LabelInput
         label={"nickname"}
         name="nickname"
-        focus={true}
+        focus={!diffEmail && !diffPassword && !diffNickname}
         defaultValue={session?.user?.name || ""}
         setDiff={setDiffNickname}
       />
@@ -26,7 +32,6 @@ export default function ChangeProfile() {
         <LabelInput
           label={"email"}
           name="email"
-          focus={true}
           defaultValue={session?.user?.email || ""}
           setDiff={setDiffEmail}
           className="w-full"
@@ -55,7 +60,7 @@ export default function ChangeProfile() {
         setDiff={setDiffPassword}
       />
       {diffPassword && <Button variant={"success"}>Change Password</Button>}
-      <div className="flex">
+      <div className="flex gap-3">
         <Button type="reset" variant={"outline"}>
           <UndoIcon />
           Cancel

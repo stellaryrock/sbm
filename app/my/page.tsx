@@ -21,7 +21,7 @@ export default function My() {
       <div className="w-full rounded-md border p-5 text-center shadow-md">
         <h1 className="mb-5 text-3xl">My Page</h1>
         <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-1">
+          <div className="col-span-1 flex flex-col justify-between">
             <ImageUploader
               changeImage={updateProfileImage}
               src={image}

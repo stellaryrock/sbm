@@ -213,7 +213,7 @@ export const resendRegist = async (
   redirect(`/sign/error?error=CheckEmail&email=${email}`);
 };
 
-const sendmailByFetch = async ({
+export const sendmailByFetch = async ({
   email,
   emailcheck,
   nickname,
