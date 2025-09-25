@@ -301,3 +301,8 @@ export const updateProfileImage = async (formData: FormData) => {
 
   return [null, mbr];
 };
+
+export const changeProfile = async (formData: FormData) => {
+  const ent = Object.fromEntries(formData.entries());
+  console.log("🚀 ~ changeProfile ~ ent:", ent);
+};

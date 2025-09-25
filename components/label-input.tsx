@@ -2,6 +2,7 @@
 "use client";
 
 import {
+  type ChangeEvent,
   type ComponentProps,
   type RefObject,
   useEffect,
@@ -19,6 +20,7 @@ type Props = {
   focus?: boolean;
   error?: ValidError;
   inputClassName?: string;
+  setDiff?: (hasDiff: boolean) => void;
 };
 
 export default function LabelInput({
@@ -32,6 +34,7 @@ export default function LabelInput({
   placeholder,
   className,
   inputClassName,
+  setDiff,
   ...props
 }: Props & ComponentProps<"input">) {
   const uniqName = useId();
@@ -39,6 +42,13 @@ export default function LabelInput({
   const err = !!error && !!name && error[name] ? error[name].errors : [];
   const val =
     !!error && !!name && error[name] ? error[name].value?.toString() : "";
+
+  const inputChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!setDiff) return;
+
+    const { value, defaultValue } = e.target;
+    setDiff(value !== defaultValue);
+  };
 
   useEffect(() => {
     if (!focus && !err.length) return;
@@ -65,6 +75,7 @@ export default function LabelInput({
             "bg-gray-100 font-normal focus:bg-white",
             inputClassName,
           )}
+          onChange={inputChangeHandler}
           {...props}
         />
         {err.map((e) => (

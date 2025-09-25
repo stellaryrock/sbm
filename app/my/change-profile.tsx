@@ -9,25 +9,29 @@ import { useState } from "react";
 export default function ChangeProfile() {
   const { data: session } = useSession({ required: true });
   const [diffEmail, setDiffEmail] = useState(false);
+  const [diffPassword, setDiffPassword] = useState(false);
+  const [diffNickname, setDiffNickname] = useState(false);
 
   return (
-    <form action="" className="space-y-3 text-left">
+    <form className="space-y-3 text-left">
       <LabelInput
         label={"nickname"}
         name="nickname"
         focus={true}
         defaultValue={session?.user?.name || ""}
+        setDiff={setDiffNickname}
       />
+      {diffNickname && <Button variant={"success"}>Change Nickname</Button>}
       <div className="flex items-end gap-2">
         <LabelInput
           label={"email"}
           name="email"
           focus={true}
           defaultValue={session?.user?.email || ""}
-          onChange={(e) => setDiffEmail(e.target.value !== session?.user.email)}
+          setDiff={setDiffEmail}
           className="w-full"
         />
-        {diffEmail && <Button variant={"outline"}>Send Verify Code</Button>}
+        {diffEmail && <Button variant={"success"}>Send Verify Code</Button>}
       </div>
 
       <LabelInput
@@ -41,13 +45,16 @@ export default function ChangeProfile() {
         name="new_passwd"
         type="password"
         placeholder="New Password"
+        setDiff={setDiffPassword}
       />
       <LabelInput
         label="New Password Confirm"
         name="new_passwd2"
         type="password"
         placeholder="New Password Confirm"
+        setDiff={setDiffPassword}
       />
+      {diffPassword && <Button variant={"success"}>Change Password</Button>}
       <div className="flex">
         <Button type="reset" variant={"outline"}>
           <UndoIcon />
