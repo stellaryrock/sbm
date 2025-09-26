@@ -25,6 +25,9 @@
           "options": {}
         }
       },
+      "style": {
+        "useNodejsImportProtocol": "off"
+      },
       "suspicious": {
         "noUnknownAtRules": "off"
       },

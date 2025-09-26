@@ -1,6 +1,6 @@
-import Img from "@/components/ui/img";
 import DummyProfile from "@/public/dummy_profile.png";
 import { SquareLibraryIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { use } from "react";
 import ThemeChanger from "../components/theme-changer";
@@ -8,7 +8,6 @@ import { auth } from "../lib/auth";
 
 export default function Nav() {
   const session = use(auth());
-  console.log("🚀 ~ Nav ~ session:", session);
   const didLogin = !!session?.user;
 
   return (
@@ -18,13 +17,13 @@ export default function Nav() {
       </Link>
       <ThemeChanger />
       {didLogin ? (
-        <Link href="/my">
-          <Img
+        <Link href="/my" className="relative h-[40px] w-[40px] overflow-hidden">
+          <Image
             className="rounded-full"
-            src={session.user.image ?? DummyProfile.src}
+            src={session.user.image ?? DummyProfile}
             alt={session?.user.name || "guest"}
-            width={30}
-            height={30}
+            fill
+            unoptimized={process.env.NODE_ENV === "development"}
           />
         </Link>
       ) : (

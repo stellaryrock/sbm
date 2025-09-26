@@ -1,9 +1,9 @@
 "use client";
-import type { Member } from "@/lib/generated/prisma";
+import type { UpdateProfileImageReturn } from "@/app/sign/sign.action";
 import { cn } from "@/lib/utils";
-import type { ValidError } from "@/lib/validator";
 import DummyProfile from "@/public/dummy_profile.png";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
@@ -13,12 +13,11 @@ import {
   useState,
   useTransition,
 } from "react";
-import Img from "./ui/img";
 
 type Props = {
   src?: string | null | undefined;
   alt?: string;
-  changeImage: (formData: FormData) => Promise<[ValidError] | [null, Member]>;
+  changeImage: (formData: FormData) => UpdateProfileImageReturn;
 };
 
 export default function ImageUploader({ src, alt, changeImage }: Props) {
@@ -28,44 +27,51 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
   const [img, setImg] = useState(src);
   const [isDragging, setDragging] = useState(false);
   const router = useRouter();
+  const [errorMsgs, setErrorMsgs] = useState<string[]>([]);
 
   const setImageFile = (evt: ChangeEvent<HTMLInputElement>) => {
     if (!evt.target.files?.length) return;
     setPreview(evt.target.files[0]);
   };
 
-  const setPreview = (file: File) => {
+  const setPreview = (file: File, needSubmit: boolean = true) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      if (e.target) setImg(e.target.result as string);
-      formRef.current?.requestSubmit();
+      //if (e.target) setImg(e.target.result as string);
+      if (needSubmit) formRef.current?.requestSubmit();
     };
     reader.readAsDataURL(file);
   };
 
   const dropFile = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+
     setDragging(false);
     const files = e.dataTransfer.files;
 
     if (files?.length) {
       const file = files[0];
-      setPreview(file);
+      setPreview(file, false);
 
       const formData = new FormData();
-      formData.set("image", file);
-      submitForm(formData);
+      formData.append("image", file);
+      uploadImage(formData);
     }
   };
 
   const [isPending, startTransition] = useTransition();
 
-  const submitForm = (formData: FormData) => {
+  const uploadImage = (formData: FormData) => {
+    setErrorMsgs([]);
     startTransition(async () => {
       if (!changeImage) return;
       const [err, mbr] = await changeImage(formData);
-      if (err) return console.log(err);
 
+      if (typeof err?.image === "object" && err?.image?.errors.length)
+        return setErrorMsgs(err.image.errors);
+
+      setImg(formData.get("image")?.toString());
       await update(mbr);
       router.refresh();
     });
@@ -74,34 +80,37 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    submitForm(formData);
+    uploadImage(formData);
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: <file attach>
-    <div
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragging(false);
-      }}
-      onDrop={dropFile}
-      className={cn(
-        "relative mx-auto aspect-square w-full max-w-96 overflow-hidden rounded-full border-2 shadow-sm",
-        { "border-blue-500 border-dotted": isDragging },
-      )}
-    >
-      <form onSubmit={submitHandler} className="" ref={formRef}>
-        <Img
-          src={img || DummyProfile.src}
-          alt={alt}
+    <form onSubmit={submitHandler} ref={formRef}>
+      {/** biome-ignore lint/a11y/noStaticElementInteractions: <file attach> */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setDragging(false);
+        }}
+        onDrop={dropFile}
+        className={cn(
+          "relative mx-auto aspect-square w-full max-w-96 overflow-hidden rounded-full border-2 shadow-sm",
+          { "border-blue-500 border-dotted": isDragging },
+        )}
+      >
+        <Image
+          src={img || DummyProfile}
+          alt={alt || "guest"}
           onClick={() => fileRef.current?.click()}
           className={"h-full w-full cursor-pointer object-cover"}
+          unoptimized={process.env.NODE_ENV === "development"}
+          fill
         />
+
         <input
           type="file"
           name="image"
@@ -111,7 +120,14 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           disabled={isPending}
           hidden
         />
-      </form>
-    </div>
+      </div>
+      <div>
+        {errorMsgs.map((emsg) => (
+          <p key={emsg} className="text-red-500">
+            {emsg}
+          </p>
+        ))}
+      </div>
+    </form>
   );
 }

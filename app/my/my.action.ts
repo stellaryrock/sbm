@@ -1,69 +1,92 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/db";
-import { newToken } from "@/lib/utils";
+import prisma, { findMemberByEmail } from "@/lib/db";
+import { comparePassword } from "@/lib/utils";
 import { validate, type ValidError } from "@/lib/validator";
-import { compareSync } from "bcryptjs";
 import { redirect } from "next/navigation";
 import z from "zod";
-import { findMemberByEmail, sendmailByFetch } from "../sign/sign.action";
 
-export const changePassword = async (
+export const validateProfile = async (
   _: ValidError | undefined,
   formData: FormData,
 ) => {
+  const ent = Object.fromEntries(formData.entries());
+  console.log("🚀 ~ validateProfile ~ ent:", ent);
+
+  const zbase = z.object({
+    email: z.email(),
+    nickname: z.string().min(3, "3자 이상 입력해주세요."),
+  });
+
+  const diffPassword = formData.get("diffPassword") === "true";
+  const diffEmail = formData.get("diffEmail") === "true";
+  const diffNickname = formData.get("diffNickname") === "true";
+
+  const zobj = diffPassword
+    ? zbase
+        .extend({
+          curr_passwd: z.string().min(6, "6자 이상 입력해주세요."),
+          new_passwd: z.string().min(6, "6자 이상 입력해주세요."),
+          new_passwd2: z.string().min(6, "6자 이상 입력해주세요."),
+        })
+        .refine(({ new_passwd, new_passwd2 }) => new_passwd === new_passwd2, {
+          path: ["new_passwd2"],
+          message: "비밀번호가 일치하지 않습니다.",
+        })
+    : zbase;
+
+  const [err, data] = validate(zobj, formData);
+
+  if (err) return err;
+
+  const { email: new_email, nickname: new_nickname } = data;
+
   const session = await auth();
   if (!session?.user.email) redirect("/sign");
 
-  const { email } = session.user;
+  const { email, name: nickname } = session.user;
 
-  const zobj = z.object({
-    curr_passwd: z.string().min(6, "6자 이상 입력해주세요."),
-    new_passwd: z.string().min(6, "6자 이상 입력해주세요."),
-    new_passwd2: z.string().min(6, "6자 이상 입력해주세요."),
-  });
+  if (diffEmail && email === new_email) redirect("/sign");
+  if (diffNickname && nickname === new_nickname) redirect("/sign");
 
-  const [err, data] = validate(zobj, formData);
-  if (err) return err;
+  const mbr = await findMemberByEmail(session.user.email, diffPassword);
 
-  const { curr_passwd: passwd, new_passwd } = data;
+  let pwMatched: boolean = false;
+  let passwd: string | undefined = "";
+  let new_passwd: string | undefined = "";
 
-  const mbr = await findMemberByEmail(email, true);
-  // SNS-LOGIN
-  if (!mbr?.passwd) redirect(`/sign?email${email}`);
+  if (diffPassword) {
+    if (!mbr?.passwd)
+      return {
+        curr_passwd: { errors: ["SNS 계정으로 가입된 회원입니다."], value: "" },
+        new_passwd: { errors: [], value: "" },
+        new_passwd2: { errors: [], value: "" },
+      };
 
-  const passwdMatched = compareSync(passwd, mbr?.passwd ?? "");
-  if (!passwdMatched) return { passwd: { errors: ["Check your password!"] } };
+    passwd = formData.get("passwd")?.toString();
+    new_passwd = formData.get("new_passwd")?.toString();
 
-  const emailType = "reset-password";
-  const emailcheck = newToken();
-  const { nickname } = await prisma.member.update({
-    select: { nickname: true },
+    pwMatched = await comparePassword(passwd, mbr.passwd);
+
+    if (!pwMatched)
+      return { curr_passwd: { errors: ["비밀번호를 확인하세요!"], value: "" } };
+  }
+
+  const chk = await findMemberByEmail(new_email);
+  if (chk)
+    return {
+      email: { errors: ["이미 가입된 이메일입니다."], value: new_email },
+    };
+
+  await prisma.member.update({
     where: { email },
-    data: { passwd: new_passwd, emailType, emailcheck },
+    data: {
+      email: diffEmail ? new_email : undefined,
+      nickname: diffNickname ? new_nickname : undefined,
+      passwd: diffPassword && pwMatched ? new_passwd : undefined,
+    },
   });
 
-  const rs = await sendmailByFetch({
-    email,
-    emailcheck,
-    nickname,
-    emailType,
-  });
-
-  if (!rs.ok) return { newPasswd: { errors: ["Fail to send email!"] } };
-
-  redirect(
-    `/sign/error?error='CheckEmail'&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`,
-  );
+  return undefined;
 };
-
-export const changeNickname = async (
-  _: ValidError | undefined,
-  formData: FormData,
-) => {};
-
-export const changeEmail = async (
-  _: ValidError | undefined,
-  formData: FormData,
-) => {};

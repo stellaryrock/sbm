@@ -1,4 +1,4 @@
-import { findMemberByEmailcheck } from "@/app/sign/sign.action";
+import { findMemberByEmailcheck } from "@/lib/db";
 import { redirect } from "next/navigation";
 import ResetPasswd from "./reset-passwd";
 

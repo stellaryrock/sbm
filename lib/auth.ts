@@ -1,12 +1,11 @@
-import { findMemberByEmail } from "@/app/sign/sign.action";
-import { compare } from "bcryptjs";
 import NextAuth, { AuthError, type User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Github from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import Kakao from "next-auth/providers/kakao";
 import Naver from "next-auth/providers/naver";
-import prisma from "./db";
+import prisma, { findMemberByEmail } from "./db";
+import { comparePassword } from "./utils";
 
 export const {
   handlers: { GET, POST },
@@ -52,7 +51,7 @@ export const {
         if (!mbr.passwd)
           throw authError("RegistedBySNS", "OAuthAccountNotLinked");
 
-        const isValidPasswd = await compare(user.passwd ?? "", mbr.passwd);
+        const isValidPasswd = await comparePassword(user.passwd, mbr.passwd);
         if (!isValidPasswd)
           throw authError("Invalid Password!", "CredentialsSignin");
       } else {
@@ -81,6 +80,7 @@ export const {
         token.image = userData.image;
         token.isadmin = userData.isadmin;
 
+        // jwt 연장
         // if (account) {
         //   console.log("🚀 ~ jwt ~ account:", account);
         //   // accesstoken, id_token (jwt)

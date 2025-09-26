@@ -1,13 +1,14 @@
 "use server";
 
 import { auth, signIn, signOut } from "@/lib/auth";
-import prisma from "@/lib/db";
+import prisma, { findMemberByEmail } from "@/lib/db";
 import { newToken, uniqueId } from "@/lib/utils";
 import { validate, type ValidError } from "@/lib/validator";
 import { hash } from "bcryptjs";
 import { existsSync } from "fs";
 import { writeFile } from "fs/promises";
 import { AuthError } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import path from "path";
 import z from "zod";
@@ -230,42 +231,7 @@ export const sendmailByFetch = async ({
   });
 };
 
-export const findMemberByEmail = async (
-  email: string,
-  passwd: boolean = false,
-) =>
-  prisma.member.findUnique({
-    select: {
-      id: true,
-      nickname: true,
-      isadmin: true,
-      emailcheck: true,
-      image: true,
-      outdt: true,
-      emailType: true,
-      passwd,
-    },
-    where: { email },
-  });
-
-export const findMemberByEmailcheck = async (
-  emailcheck: string,
-  passwd: boolean = false,
-) =>
-  prisma.member.findFirst({
-    select: {
-      id: true,
-      nickname: true,
-      isadmin: true,
-      emailcheck: true,
-      emailType: true,
-      image: true,
-      outdt: true,
-      passwd,
-    },
-    where: { emailcheck },
-  });
-
+export type UpdateProfileImageReturn = ReturnType<typeof updateProfileImage>;
 export const updateProfileImage = async (formData: FormData) => {
   const session = await auth();
   if (!session?.user || !session?.user.email) throw new Error("Need Login!");
@@ -299,10 +265,14 @@ export const updateProfileImage = async (formData: FormData) => {
     data: { image },
   });
 
+  revalidatePath("/profiles");
+
   return [null, mbr];
 };
 
-export const changeProfile = async (formData: FormData) => {
+export const changeProfile = async (_: undefined, formData: FormData) => {
   const ent = Object.fromEntries(formData.entries());
   console.log("🚀 ~ changeProfile ~ ent:", ent);
+
+  return undefined;
 };
