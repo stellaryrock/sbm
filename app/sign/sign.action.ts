@@ -2,8 +2,8 @@
 
 import { auth, signIn, signOut } from "@/lib/auth";
 import prisma, { findMemberByEmail } from "@/lib/db";
-import { newToken, uniqueId } from "@/lib/utils";
-import { validate, type ValidError } from "@/lib/validator";
+import { newToken, uniqId, uniqNumId } from "@/lib/utils";
+import { existsEmail, validate, type ValidError } from "@/lib/validator";
 import { hash } from "bcryptjs";
 import { existsSync } from "fs";
 import { writeFile } from "fs/promises";
@@ -94,6 +94,10 @@ export const regist = async (
   if (err) return err;
 
   const { email, nickname, passwd: orgPasswd } = data;
+
+  const existErr = existsEmail(email);
+  if (existErr) return existErr;
+
   const mbr = await findMemberByEmail(email);
   if (mbr)
     return {
@@ -253,7 +257,7 @@ export const updateProfileImage = async (formData: FormData) => {
   const uploadDir = path.join(`${process.cwd()}`, "public", "profiles");
   if (existsSync(uploadDir)) path.join(process.cwd(), "public", "profiles");
 
-  const fileName = `${id}_${uniqueId()}_${data.image.name}`;
+  const fileName = `${id}_${uniqId()}_${data.image.name}`;
   const filePath = path.join(uploadDir, fileName);
 
   const buffer = Buffer.from(await data.image.arrayBuffer());
@@ -274,5 +278,116 @@ export const changeProfile = async (_: undefined, formData: FormData) => {
   const ent = Object.fromEntries(formData.entries());
   console.log("🚀 ~ changeProfile ~ ent:", ent);
 
+  return undefined;
+};
+
+export const sendEmailChangeCode = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
+
+  const { email } = session.user;
+
+  const zobj = z.object({
+    newEmail: z.email(),
+  });
+
+  const [err, data] = validate(zobj, formData);
+  console.log("🚀 ~ sendEmailChangeCode ~ data:", data);
+  console.log("🚀 ~ sendEmailChangeCode ~ err:", err);
+
+  if (err) return err;
+
+  const { newEmail } = data;
+
+  const existsErr = await existsEmail(newEmail, "newEmail");
+  console.log("🚀 ~ sendEmailChangeCode ~ existsErr:", existsErr);
+  if (existsErr) return existsErr;
+
+  const emailcheck = uniqNumId();
+  await prisma.member.update({
+    where: { email },
+    data: { emailcheck },
+  });
+
+  /*
+    Error [PrismaClientKnownRequestError]: 
+    Invalid `prisma.member.update()` invocation:
+  */
+  setTimeout(
+    async () => {
+      await prisma.member.update({
+        where: { email },
+        data: { emailcheck: null },
+      });
+    },
+    2 * 60 * 1000,
+  );
+
+  await sendmailByFetch({
+    email,
+    emailcheck,
+    emailType: "email-change-code",
+  });
+};
+
+export type UpdateMemberReturn = ReturnType<typeof updateNickname>;
+export const updateNickname = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error("Need Login");
+  const zobj = z.object({ nickname: z.string().min(3) });
+
+  const { email } = session.user;
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return [err, null] as const;
+
+  const { nickname } = data;
+  const mbr = await prisma.member.update({
+    where: { email },
+    data: { nickname },
+  });
+
+  return [err, mbr] as const;
+};
+
+export const updateEmail = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
+
+  const { email } = session.user;
+  const mbr = await findMemberByEmail(email);
+  if (!mbr || !mbr.emailcheck || mbr.emailcheck.length !== 5) {
+    return [
+      {
+        emailChangeCode: { errors: ["Invalid Code!"] },
+      } as ValidError,
+      null,
+    ] as const;
+  }
+
+  const zobj = z.object({
+    newEmail: z.email(),
+    emailChangeCode: z.literal(mbr.emailcheck, "Invalid Code!"),
+  });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return [err, null] as const;
+
+  const { newEmail } = data;
+  const existsErr = await existsEmail(newEmail);
+  if (existsErr) return [existsErr, null] as const;
+
+  const newMbr = await prisma.member.update({
+    where: { email },
+    data: { email: newEmail, emailcheck: null },
+  });
+  //console.log("🚀 ~ newMbr:", newMbr);
+  return [null, newMbr] as const;
+};
+
+export const changePasswd = async (
+  _: ValidError | undefined,
+  formData: FormData,
+) => {
   return undefined;
 };

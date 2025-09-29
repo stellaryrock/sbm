@@ -1,6 +1,7 @@
 "use client";
 
 import { LoaderPinwheelIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useReducer, useRef } from "react";
@@ -29,6 +30,7 @@ const storeEmail = (email: string | null) =>
 const readEmail = () => localStorage.getItem("SBM_LOCAL_EMAIL");
 
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
+  const { update } = useSession();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const redirectTo = searchParams.get("redirectTo");

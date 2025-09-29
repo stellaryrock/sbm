@@ -1,10 +1,8 @@
 "use client";
 import type { UpdateProfileImageReturn } from "@/app/sign/sign.action";
-import { cn } from "@/lib/utils";
-import DummyProfile from "@/public/dummy_profile.png";
+import { cn, DummyProfile } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Image, { type StaticImageData } from "next/image";
 import {
   type ChangeEvent,
   type DragEvent,
@@ -15,7 +13,7 @@ import {
 } from "react";
 
 type Props = {
-  src?: string | null | undefined;
+  src?: string | StaticImageData;
   alt?: string;
   changeImage: (formData: FormData) => UpdateProfileImageReturn;
 };
@@ -26,7 +24,6 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
   const formRef = useRef<HTMLFormElement>(null);
   const [img, setImg] = useState(src);
   const [isDragging, setDragging] = useState(false);
-  const router = useRouter();
   const [errorMsgs, setErrorMsgs] = useState<string[]>([]);
 
   const setImageFile = (evt: ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +34,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
   const setPreview = (file: File, needSubmit: boolean = true) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      //if (e.target) setImg(e.target.result as string);
+      if (e.target) setImg(e.target.result as string);
       if (needSubmit) formRef.current?.requestSubmit();
     };
     reader.readAsDataURL(file);
@@ -71,9 +68,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
       if (typeof err?.image === "object" && err?.image?.errors.length)
         return setErrorMsgs(err.image.errors);
 
-      setImg(formData.get("image")?.toString());
       await update(mbr);
-      router.refresh();
     });
   };
 
@@ -108,6 +103,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           onClick={() => fileRef.current?.click()}
           className={"h-full w-full cursor-pointer object-cover"}
           unoptimized={process.env.NODE_ENV === "development"}
+          onError={() => setImg(DummyProfile)}
           fill
         />
 

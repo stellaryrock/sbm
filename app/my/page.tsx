@@ -10,8 +10,6 @@ import ChangeProfile from "./change-profile";
 
 export default function My() {
   const session = use(auth());
-  console.log("🚀 ~ My ~ session:", session);
-
   if (!session?.user?.name) redirect("/sign");
 
   const { name, image } = session.user;
@@ -24,17 +22,17 @@ export default function My() {
           <div className="col-span-1 flex flex-col justify-between">
             <ImageUploader
               changeImage={updateProfileImage}
-              src={image}
+              src={image || ""}
               alt={name}
             />
             <div className="flex items-center justify-around">
               <Link href="/api/auth/signout">Goto SignOut</Link>
-              <SignOutButton name={session?.user.name} />
-              <Button variant="destructive">Withdraw </Button>
+              <SignOutButton />
+              <Button variant="destructive">Widthrow</Button>
             </div>
           </div>
           <div className="col-span-2">
-            <ChangeProfile />
+            <ChangeProfile user={session.user} />
           </div>
         </div>
       </div>

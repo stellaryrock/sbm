@@ -5,7 +5,7 @@ import Google from "next-auth/providers/google";
 import Kakao from "next-auth/providers/kakao";
 import Naver from "next-auth/providers/naver";
 import prisma, { findMemberByEmail } from "./db";
-import { comparePassword } from "./utils";
+import { comparePassword } from "./validator";
 
 export const {
   handlers: { GET, POST },
@@ -98,7 +98,7 @@ export const {
         session.user.id = token.id?.toString() || "";
         session.user.name = token.name;
         session.user.email = token.email as string;
-        session.user.image = token.image as string;
+        session.user.image = token.image?.toString();
         session.user.isadmin = token.isadmin;
       }
       return session;

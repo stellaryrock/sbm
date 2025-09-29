@@ -58,6 +58,27 @@ export const sendPasswordReset = async (
   return sendMail(to, subject, html);
 };
 
+export const sendEmailChangeCodeMail = async (
+  to: string,
+  authKey: string,
+  nickname?: string,
+) => {
+  const subject = "[Bookmark] Email Change Verification Code";
+  const html = `
+    <div style="display: grid; place-items: center; height: 200px;">
+      <h1>Email Address Change Code</h1>
+      <h2>Hello, ${nickname}</h2>
+      <h3 style="margin: 10px 0;">
+        Input the below code to change your email address.
+      </h3>
+      <h1 style="font-weight: 700; letter-spacing: 0.3rem;">${authKey}</h1>
+      <a href="${process.env.NEXT_PUBLIC_URL}/forgotpasswd/${authKey}">Reset Password</a>
+    </div>
+  `;
+
+  return sendMail(to, subject, html);
+};
+
 const sendMail = async (
   to: string,
   subject: string,

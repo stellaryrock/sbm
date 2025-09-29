@@ -6,14 +6,14 @@ import { redirect } from "next/navigation";
 import { logout } from "../app/sign/sign.action";
 import { Button } from "./ui/button";
 
-export default function SignOutButton({ name }: { name: string }) {
+export default function SignOutButton() {
   const session = useSession();
   if (!session?.data?.user) redirect("/");
 
   return (
     <form action={logout}>
       <Button variant={"success"}>
-        <LogOutIcon /> Sign Out
+        <LogOutIcon /> Sign Out {session.data.user.name}
       </Button>
     </form>
   );

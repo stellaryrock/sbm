@@ -1,34 +1,54 @@
-//https://github.com/indiflex/sbm/blob/develop/lib/validator.ts
-
+import { compare } from "bcryptjs";
+import { existsSync } from "fs";
+import path from "path";
 import z from "zod";
+import { findMemberByEmail } from "./db";
 
 export type ValidError = Record<
   string,
   { errors: string[]; value?: FormDataEntryValue | null }
 >;
 
-export const validateObject = <T extends z.ZodObject>(
-  zobj: T,
-  object: Record<string, FormDataEntryValue | string | unknown>,
-): [ValidError] | [undefined, z.core.output<T>] => {
-  const validator = zobj.safeParse(object);
-  if (!validator.success) {
-    const err = z.treeifyError(validator.error).properties as ValidError;
-    for (const [prop, value] of Object.entries(object)) {
-      if (prop.startsWith("$")) continue;
-      if (!err[prop]) err[prop] = { errors: [] };
-      err[prop].value = value?.toString();
-    }
-    return [err];
-  }
-
-  return [undefined, validator.data];
-};
-
 export const validate = <T extends z.ZodObject>(
   zobj: T,
   formData: FormData,
+): [ValidError] | [undefined, z.core.output<T>] =>
+  validateObject(zobj, Object.fromEntries(formData.entries()));
+
+export const validateObject = <T extends z.ZodObject>(
+  zobj: T,
+  obj: Record<string, FormDataEntryValue | string | unknown>,
 ): [ValidError] | [undefined, z.core.output<T>] => {
-  const ent = Object.fromEntries(formData.entries());
-  return validateObject(zobj, ent);
+  const validator = zobj.safeParse(obj);
+
+  if (!validator.success) {
+    const err = z.treeifyError(validator.error).properties as ValidError;
+    for (const [prop, value] of Object.entries(obj)) {
+      if (prop.startsWith("$")) continue;
+      if (!err[prop]) err[prop] = { errors: [] };
+      err[prop].value = value as string;
+      // err[prop] = { ...(err[prop] ?? { errors: [] }), value };
+    }
+    return [err];
+  } else {
+    return [undefined, validator.data];
+  }
+};
+
+export const existsEmail = async (email: string, prop: string = "email") => {
+  const mbr = await findMemberByEmail(email);
+  if (mbr)
+    return {
+      [prop]: { errors: ["Duplicated Email Address!"], value: email },
+    };
+};
+
+export const comparePassword = (p1: string | undefined, p2: string) =>
+  compare(p1 || "", p2);
+
+export const existsFile = (filePath: string | undefined | null) => {
+  if (!filePath) return filePath;
+
+  const fullPath = path.join(process.cwd(), "public", filePath);
+  return existsSync(fullPath) ? filePath : null;
 };

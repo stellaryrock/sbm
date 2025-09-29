@@ -1,7 +1,8 @@
-import { compare } from "bcryptjs";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 } from "uuid";
+
+export { default as DummyProfile } from "@/public/dummy_profile.png";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -9,20 +10,15 @@ export function cn(...inputs: ClassValue[]) {
 
 export const newToken = () => v4();
 
-export const uniqueNumId = (cnt = 5) =>
+export const uniqNumId = (cnt = 5) =>
   Math.random()
     .toString(10)
     .substring(2, 2 + cnt);
 
-export const uniqueId = (cnt = 5) =>
+export const uniqId = (cnt = 5) =>
   Math.random()
     .toString(10)
     .substring(2, 2 + cnt);
-
-export const comparePassword = async (
-  p1: string | undefined,
-  p2: string | undefined,
-) => compare(p1 || "", p2 || "");
 
 export const DynamicCsses = [
   "translate-x-[-20px]",
