@@ -1,5 +1,6 @@
 "use client";
 
+import { useDebounce } from "@/app/my/use-debounce";
 import { cn } from "@/lib/utils";
 import type { ValidError } from "@/lib/validator";
 import { CheckLineIcon, UndoDotIcon } from "lucide-react";
@@ -36,25 +37,11 @@ export default function LabelEditor({
   const [validError, setValidError] = useState<ValidError>();
   const labelInputRef = useRef<HTMLInputElement>(null);
 
-  const prev = useRef<string[]>([]);
-  const next = useRef<string[]>([]);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>(null);
+  const chkDirty = () => setDirty(labelInputRef.current?.defaultValue !== labelInputRef.current?.value);
+  const debouncedChkDirty = useDebounce(chkDirty, 500);
 
   const keyUpHandler = (e: KeyboardEvent<HTMLInputElement>) => {
-    next.current.push(e.key);
-
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-
-    debounceTimer.current = setTimeout(() => {
-      if (next.current.join() !== prev.current.join()) {
-        setDirty(true);
-        prev.current = [...next.current];
-      } else {
-        setDirty(false);
-      }
-    }, 500);
+    debouncedChkDirty();
   };
 
   const [isPending, startTransition] = useTransition();

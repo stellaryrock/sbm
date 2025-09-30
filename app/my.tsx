@@ -1,22 +1,19 @@
-"use client";
-
+import { auth } from "@/lib/auth";
 import { DummyProfile } from "@/lib/utils";
-import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function My() {
-  const session = useSession();
-  const didLogin = !!session?.data?.user;
+export default async function My() {
+  const session = await auth();
 
   return (
     <>
-      {didLogin ? (
+      {session?.user ? (
         <Link href="/my" className="relative h-[40px] w-[40px] overflow-hidden">
           <Image
             className="rounded-full"
-            src={session?.data?.user?.image ?? DummyProfile}
-            alt={session?.data?.user.name || "guest"}
+            src={session?.user?.image || DummyProfile}
+            alt={session?.user.name || "guest"}
             fill
             unoptimized={process.env.NODE_ENV === "development"}
           />
