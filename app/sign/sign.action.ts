@@ -3,7 +3,12 @@
 import { auth, signIn, signOut } from "@/lib/auth";
 import prisma, { findMemberByEmail } from "@/lib/db";
 import { newToken, uniqId, uniqNumId } from "@/lib/utils";
-import { existsEmail, validate, type ValidError } from "@/lib/validator";
+import {
+  comparePassword,
+  existsEmail,
+  validate,
+  type ValidError,
+} from "@/lib/validator";
 import { hash } from "bcryptjs";
 import { existsSync } from "fs";
 import { writeFile } from "fs/promises";
@@ -274,13 +279,6 @@ export const updateProfileImage = async (formData: FormData) => {
   return [null, mbr];
 };
 
-export const changeProfile = async (_: undefined, formData: FormData) => {
-  const ent = Object.fromEntries(formData.entries());
-  console.log("🚀 ~ changeProfile ~ ent:", ent);
-
-  return undefined;
-};
-
 export const sendEmailChangeCode = async (formData: FormData) => {
   const session = await auth();
   if (!session?.user || !session.user.email) throw new Error("Need Login!");
@@ -292,15 +290,12 @@ export const sendEmailChangeCode = async (formData: FormData) => {
   });
 
   const [err, data] = validate(zobj, formData);
-  console.log("🚀 ~ sendEmailChangeCode ~ data:", data);
-  console.log("🚀 ~ sendEmailChangeCode ~ err:", err);
 
   if (err) return err;
 
   const { newEmail } = data;
 
   const existsErr = await existsEmail(newEmail, "newEmail");
-  console.log("🚀 ~ sendEmailChangeCode ~ existsErr:", existsErr);
   if (existsErr) return existsErr;
 
   const emailcheck = uniqNumId();
@@ -310,8 +305,8 @@ export const sendEmailChangeCode = async (formData: FormData) => {
   });
 
   /*
-    Error [PrismaClientKnownRequestError]: 
-    Invalid `prisma.member.update()` invocation:
+  Error [PrismaClientKnownRequestError]:
+  Invalid `prisma.member.update()` invocation:
   */
   setTimeout(
     async () => {
@@ -381,13 +376,99 @@ export const updateEmail = async (formData: FormData) => {
     where: { email },
     data: { email: newEmail, emailcheck: null },
   });
-  //console.log("🚀 ~ newMbr:", newMbr);
+
   return [null, newMbr] as const;
+};
+
+export const sendPasswordResetMail = async (formData: FormData) => {
+  const session = await auth();
+  if (!session || !session.user || !session.user.email)
+    return signOut({ redirectTo: "/sign" });
+
+  const { email } = session.user;
+
+  const zobj = z.object({
+    curr_passwd: z.string().min(6, "6자 이상 입력해주세요."),
+  });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const { curr_passwd: passwd } = data;
+  const mbr = await findMemberByEmail(email, true);
+  if (!mbr) return signOut({ redirectTo: "/sign" });
+  if (!mbr.passwd)
+    return { curr_passwd: { errors: ["sns 계정으로 가입된 회원입니다."] } };
+
+  const pwMatched = await comparePassword(passwd, mbr.passwd);
+  if (!pwMatched)
+    return { curr_passwd: { errors: ["비밀번호를 확인하세요."] } };
+
+  const emailcheck = newToken();
+  const emailType = "reset-password";
+  const { nickname } = await prisma.member.update({
+    select: { nickname: true },
+    where: { email },
+    data: { emailcheck, emailType },
+  });
+
+  const rs = await sendmailByFetch({
+    email,
+    emailcheck,
+    nickname,
+    emailType,
+  });
+
+  if (!rs.ok) return { curr_passwd: { errors: ["Fail to send email!"] } };
+
+  return signOut({
+    redirectTo: `/sign/error?error=CheckEmail&email=${email}&emailcheck=${emailcheck}&emailType=${emailType}`,
+  });
 };
 
 export const changePasswd = async (
   _: ValidError | undefined,
   formData: FormData,
 ) => {
-  return undefined;
+  const session = await auth();
+  if (!session?.user || !session?.user.email || !session?.user.name)
+    redirect(`/sign`);
+
+  const { email } = session.user;
+
+  const zobj = z
+    .object({
+      curr_passwd: z.string().min(6, "6자 이상 입력하세요."),
+      passwd: z.string().min(6, "6자 이상 입력하세요"),
+      passwd2: z.string().min(6, "6자 이상 입력하세요."),
+    })
+    .refine(({ passwd, passwd2 }) => passwd === passwd2, {
+      path: ["passwd2"],
+      message: "비밀번호가 일치하지 않습니다.",
+    });
+
+  const [err, data] = validate(zobj, formData);
+
+  if (err) return err;
+
+  const { curr_passwd: orgPasswd, passwd } = data;
+
+  const mbr = await findMemberByEmail(session.user.email, true);
+  if (!mbr) redirect(`/sign`);
+  if (!mbr.passwd)
+    return { curr_passwd: { errors: ["SNS 계정으로 가입된 회원입니다."] } };
+
+  const pwMatched = comparePassword(orgPasswd, passwd);
+  if (!pwMatched)
+    return { curr_passwd: { errors: ["비밀번호를 확인하세요."] } };
+
+  const newPasswd = await hash(passwd, 10);
+
+  // success
+  await prisma.member.update({
+    where: { email },
+    data: { passwd: newPasswd },
+  });
+
+  return signOut({ redirectTo: `/sign?email=${email}` });
 };

@@ -1,4 +1,4 @@
-import { findMemberByEmailcheck } from "@/lib/db";
+import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import ResetPasswd from "./reset-passwd";
 
@@ -9,10 +9,12 @@ export default async function ResetForgotPasswd({
 }) {
   const { emailcheck } = await params;
 
-  const mbr = await findMemberByEmailcheck(emailcheck);
+  const mbr = await prisma.member.findFirst({
+    select: { nickname: true, emailcheck: true, email: true },
+    where: { emailcheck },
+  });
 
   if (!mbr) redirect("/sign/error?error=InvalidAccount");
-
   const { email, nickname, emailcheck: emailcheckFromDb } = mbr;
 
   if (emailcheck !== emailcheckFromDb)

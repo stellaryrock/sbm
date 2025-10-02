@@ -17,11 +17,15 @@ import { Button } from "./ui/button";
 
 type Props = {
   saveAction: (formData: FormData) => Promise<ValidError | undefined>;
+  resetLabel?: string;
+  submitLabel?: string;
 };
 
 export default function LabelEditor({
   saveAction,
   label,
+  resetLabel,
+  submitLabel,
   type,
   name,
   ref,
@@ -37,7 +41,11 @@ export default function LabelEditor({
   const [validError, setValidError] = useState<ValidError>();
   const labelInputRef = useRef<HTMLInputElement>(null);
 
-  const chkDirty = () => setDirty(labelInputRef.current?.defaultValue !== labelInputRef.current?.value);
+  const chkDirty = () => {
+    const chk =
+      labelInputRef.current?.defaultValue !== labelInputRef.current?.value;
+    if (chk !== isDirty) setDirty(chk);
+  };
   const debouncedChkDirty = useDebounce(chkDirty, 500);
 
   const keyUpHandler = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -48,6 +56,8 @@ export default function LabelEditor({
 
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setValidError(undefined);
+
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       const err = await saveAction(formData);
@@ -82,10 +92,10 @@ export default function LabelEditor({
       {isDirty && (
         <div className="flex items-end gap-2">
           <Button type="reset" variant={"outline"}>
-            <UndoDotIcon />
+            <UndoDotIcon /> {resetLabel}
           </Button>
           <Button type="submit" variant={"primary"} disabled={isPending}>
-            <CheckLineIcon />
+            <CheckLineIcon /> {submitLabel}
           </Button>
         </div>
       )}

@@ -6,9 +6,8 @@ import { CheckLineIcon, UndoDotIcon } from "lucide-react";
 import type { User } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useReducer } from "react";
-import { updateNickname } from "../sign/sign.action";
+import { sendPasswordResetMail, updateNickname } from "../sign/sign.action";
 import EmailChanger from "./email-changer";
-import PasswordChanger from "./password-changer";
 
 type Props = {
   user: {
@@ -18,12 +17,21 @@ type Props = {
 export default function ChangeProfile({ user }: Props) {
   const { update, data } = useSession({ required: true });
   const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, false);
+  const [isEditingPassword, toggleEditingPassword] = useReducer(
+    (pre) => !pre,
+    false,
+  );
 
   const changeNickname = async (formData: FormData) => {
     const [err, mbr] = await updateNickname(formData);
     if (err) return err;
 
     await update(mbr);
+  };
+
+  const changePassword = async (formData: FormData) => {
+    const err = await sendPasswordResetMail(formData);
+    if (err) return err;
   };
 
   return (
@@ -49,8 +57,14 @@ export default function ChangeProfile({ user }: Props) {
           Change {data?.user.email}
         </Button>
       )}
-
-      <PasswordChanger />
+      {/* <PasswordChanger /> */}
+      <LabelEditor
+        label={"password"}
+        submitLabel="Send Verify Email"
+        name="curr_passwd"
+        type="password"
+        saveAction={changePassword}
+      />
 
       <div className="flex justify-center gap-5">
         <Button type="reset" variant={"outline"}>

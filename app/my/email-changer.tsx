@@ -46,7 +46,6 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
       if (submitType === "confirm") {
         const [err, mbr] = await updateEmail(formData);
         if (err) {
-          console.log("🚀 ~ submitHandler ~ err:", err);
           setValidError(err);
         } else {
           await update(mbr);
@@ -108,7 +107,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
           />
           <Button
             onClick={confirmAndSave}
-            variant={"success"}
+            variant={"primary"}
             disabled={isSending}
           >
             Confirm Code & Save
