@@ -2,12 +2,12 @@
 
 import LabelEditor from "@/components/label-editor";
 import { Button } from "@/components/ui/button";
-import { CheckLineIcon, UndoDotIcon } from "lucide-react";
 import type { User } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useReducer } from "react";
-import { sendPasswordResetMail, updateNickname } from "../sign/sign.action";
+import { updateNickname } from "../sign/sign.action";
 import EmailChanger from "./email-changer";
+import PasswordChanger from "./password-changer";
 
 type Props = {
   user: {
@@ -27,11 +27,6 @@ export default function ChangeProfile({ user }: Props) {
     if (err) return err;
 
     await update(mbr);
-  };
-
-  const changePassword = async (formData: FormData) => {
-    const err = await sendPasswordResetMail(formData);
-    if (err) return err;
   };
 
   return (
@@ -57,23 +52,24 @@ export default function ChangeProfile({ user }: Props) {
           Change {data?.user.email}
         </Button>
       )}
-      {/* <PasswordChanger /> */}
-      <LabelEditor
+      {/* <LabelEditor
+        saveAction={changePassword}
         label={"password"}
         submitLabel="Send Verify Email"
         name="curr_passwd"
         type="password"
-        saveAction={changePassword}
-      />
-
-      <div className="flex justify-center gap-5">
-        <Button type="reset" variant={"outline"}>
-          <UndoDotIcon /> Cancel
+      /> */}
+      {isEditingPassword ? (
+        <PasswordChanger toggleEditing={toggleEditingPassword} />
+      ) : (
+        <Button
+          onClick={toggleEditingPassword}
+          variant={"destructive"}
+          className="mt-3"
+        >
+          Change Password
         </Button>
-        <Button type="submit" variant={"primary"}>
-          <CheckLineIcon /> Save
-        </Button>
-      </div>
+      )}
     </div>
   );
 }

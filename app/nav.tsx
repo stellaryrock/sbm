@@ -1,6 +1,8 @@
 import { SquareLibraryIcon } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import ThemeChanger from "../components/theme-changer";
+import FallbackImage from "./fallback";
 import My from "./my";
 
 export default function Nav() {
@@ -10,7 +12,9 @@ export default function Nav() {
         <SquareLibraryIcon />
       </Link>
       <ThemeChanger />
-      <My />
+      <Suspense fallback={<FallbackImage />}>
+        <My />
+      </Suspense>
     </div>
   );
 }

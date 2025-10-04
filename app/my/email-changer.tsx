@@ -7,7 +7,6 @@ import {
   type ActionDispatch,
   type FormEvent,
   type MouseEvent,
-  useReducer,
   useRef,
   useState,
   useTransition,
@@ -23,7 +22,7 @@ type Props = {
 export default function EmailChanger({ email, toggleEditing }: Props) {
   const { update } = useSession();
   const [diffEmail, setDiffEmail] = useState(false);
-  const [didSendCode, toggleSendCode] = useReducer((pre) => !pre, false);
+  const [didSendCode, setSendCode] = useState(false);
   const [validError, setValidError] = useState<ValidError>({
     email: { errors: [], value: email },
   });
@@ -40,7 +39,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
       if (submitType === "sendmail") {
         const err = await sendEmailChangeCode(formData);
         if (err) setValidError(err);
-        else toggleSendCode();
+        setSendCode(true);
       }
 
       if (submitType === "confirm") {
@@ -49,7 +48,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
           setValidError(err);
         } else {
           await update(mbr);
-          toggleSendCode();
+          setSendCode(false);
           toggleEditing();
         }
       }

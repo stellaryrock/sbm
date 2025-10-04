@@ -1,42 +1,41 @@
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
-import { CheckLineIcon } from "lucide-react";
-import { useActionState } from "react";
-import { changePasswd } from "../sign/sign.action";
+import { CheckLineIcon, UndoDotIcon } from "lucide-react";
+import { type ActionDispatch, useActionState } from "react";
+import { sendResetPasswordMail } from "../sign/sign.action";
+type Props = {
+  toggleEditing: ActionDispatch<[]>;
+};
 
-export default function PasswordChanger() {
-  const [validError, makeChangePassword, isPending] = useActionState(
-    changePasswd,
+export default function PasswordChanger({ toggleEditing }: Props) {
+  const [validError, makeChangePassword, isSending] = useActionState(
+    sendResetPasswordMail,
     undefined,
   );
 
   return (
-    <form action={makeChangePassword} className="flex flex-col gap-3">
+    <form
+      onResetCapture={toggleEditing}
+      action={makeChangePassword}
+      className="flex items-end gap-3"
+    >
       <LabelInput
         label="Current Password"
         name="curr_passwd"
         type="password"
         error={validError}
         placeholder="current password..."
-      />
-      <LabelInput
-        label="New Password"
-        name="passwd"
-        type="password"
-        error={validError}
-        placeholder="new password..."
-      />
-      <LabelInput
-        label="New Password Confirm"
-        name="passwd2"
-        type="password"
-        error={validError}
-        placeholder="new password confirm..."
+        className="flex-1"
       />
 
-      <Button type="submit" disabled={isPending} variant={"destructive"}>
-        <CheckLineIcon /> 비밀번호 변경
-      </Button>
+      <div className="mt-3 flex justify-center gap-5">
+        <Button type="reset" variant={"outline"}>
+          <UndoDotIcon /> Cancel
+        </Button>
+        <Button type="submit" disabled={isSending} variant={"primary"}>
+          <CheckLineIcon /> Send Verify Code
+        </Button>
+      </div>
     </form>
   );
 }

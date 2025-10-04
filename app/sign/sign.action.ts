@@ -380,7 +380,10 @@ export const updateEmail = async (formData: FormData) => {
   return [null, newMbr] as const;
 };
 
-export const sendPasswordResetMail = async (formData: FormData) => {
+export const sendResetPasswordMail = async (
+  _: ValidError | undefined,
+  formData: FormData,
+) => {
   const session = await auth();
   if (!session || !session.user || !session.user.email)
     return signOut({ redirectTo: "/sign" });
