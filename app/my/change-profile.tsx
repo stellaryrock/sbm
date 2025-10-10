@@ -34,6 +34,7 @@ export default function ChangeProfile({ user }: Props) {
       <LabelEditor
         label="nickname"
         name="nickname"
+        resetOption={{ keepError: true }}
         defaultValue={user.name || ""}
         saveAction={changeNickname}
       />

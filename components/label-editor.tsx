@@ -15,6 +15,9 @@ import { Button } from "./ui/button";
 
 type Props = {
   saveAction: (formData: FormData) => Promise<ValidError | undefined>;
+  resetOption?: {
+    keepError?: boolean;
+  };
   resetLabel?: string;
   submitLabel?: string;
 };
@@ -22,6 +25,7 @@ type Props = {
 export default function LabelEditor({
   saveAction,
   label,
+  resetOption = { keepError: false },
   resetLabel,
   submitLabel,
   type,
@@ -36,12 +40,16 @@ export default function LabelEditor({
   ...props
 }: ComponentProps<"input"> & LabelInputProps & Props) {
   const [isDirty, setDirty] = useState(false);
+  const [internalDefault, setInternalDefault] = useState(defaultValue);
   const [validError, setValidError] = useState<ValidError>();
   const labelInputRef = useRef<HTMLInputElement>(null);
 
   const chkDirty = () => {
-    const chk =
-      labelInputRef.current?.defaultValue !== labelInputRef.current?.value;
+    const labelInput = labelInputRef.current;
+    if (!labelInput) return;
+
+    const chk = labelInput.value !== internalDefault;
+
     if (chk !== isDirty) setDirty(chk);
   };
   //const debouncedChkDirty = useDebounce(chkDirty, 500);
@@ -53,6 +61,8 @@ export default function LabelEditor({
   const [isPending, startTransition] = useTransition();
 
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
+    if (e.type !== "submit") return;
+
     e.preventDefault();
     setValidError(undefined);
 
@@ -60,15 +70,31 @@ export default function LabelEditor({
     startTransition(async () => {
       const err = await saveAction(formData);
       if (err) setValidError(err);
-      else setDirty(false);
+      else {
+        setInternalDefault(labelInputRef.current?.value);
+        setDirty(false);
+      }
     });
+  };
+
+  const resetHandler = (e: FormEvent<HTMLFormElement>) => {
+    if (e.type !== "reset") return;
+    e.preventDefault();
+
+    setDirty(false);
+    if (!resetOption?.keepError) setValidError(undefined);
+
+    if (labelInputRef.current && internalDefault)
+      labelInputRef.current.value = internalDefault.toString();
   };
 
   return (
     <form
       onSubmit={submitHandler}
-      onResetCapture={() => setDirty(false)}
-      className="flex flex-nowrap gap-3"
+      onResetCapture={resetHandler}
+      className={cn("flex flex-nowrap gap-3", {
+        "items-center": Boolean(validError),
+      })}
     >
       <LabelInput
         label={label}
@@ -76,7 +102,7 @@ export default function LabelEditor({
         type={type}
         ref={ref || labelInputRef}
         focus={focus}
-        defaultValue={defaultValue}
+        defaultValue={internalDefault}
         placeholder={placeholder}
         className={cn(className, "w-full")}
         inputClassName={inputClassName}
