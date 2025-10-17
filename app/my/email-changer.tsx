@@ -1,12 +1,16 @@
+"use client";
+
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ValidError } from "@/lib/validator";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   type ActionDispatch,
   type FormEvent,
   type MouseEvent,
+  useReducer,
   useRef,
   useState,
   useTransition,
@@ -21,35 +25,41 @@ type Props = {
 
 export default function EmailChanger({ email, toggleEditing }: Props) {
   const { update } = useSession();
+  const router = useRouter();
+
   const [diffEmail, setDiffEmail] = useState(false);
-  const [didSendCode, setSendCode] = useState(false);
-  const [validError, setValidError] = useState<ValidError>({
-    email: { errors: [], value: email },
-  });
+  const [didSendCode, toggleSendCode] = useReducer((pre) => !pre, false);
+  const [validError, setValidError] = useState<ValidError>();
 
   const formRef = useRef<HTMLFormElement>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
   const [submitType, setSubmitType] = useState<"sendmail" | "confirm">(
     "sendmail",
   );
+
   const [isSending, startTransition] = useTransition();
+
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+
     startTransition(async () => {
       if (submitType === "sendmail") {
         const err = await sendEmailChangeCode(formData);
-        if (err) setValidError(err);
-        setSendCode(true);
-      }
-
-      if (submitType === "confirm") {
+        if (err) return setValidError(err);
+        setValidError(undefined);
+        if (!didSendCode) toggleSendCode();
+      } else if (submitType === "confirm") {
+        formData.set("emailChangeCode", codeRef.current?.value || "");
         const [err, mbr] = await updateEmail(formData);
+
         if (err) {
           setValidError(err);
         } else {
           await update(mbr);
-          setSendCode(false);
           toggleEditing();
+          toggleSendCode();
+          router.refresh();
         }
       }
     });
@@ -57,35 +67,35 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
 
   const sendmail = (e: MouseEvent) => {
     e.preventDefault();
-    flushSync(() => setSubmitType("sendmail"));
-    // setSubmitType(() => "sendmail");
+    setSubmitType(() => "sendmail");
     formRef.current?.requestSubmit();
   };
 
   const confirmAndSave = (e: MouseEvent) => {
     e.preventDefault();
     flushSync(() => setSubmitType("confirm"));
-    // setSubmitType(() => "confirm");
     formRef.current?.requestSubmit();
   };
 
   return (
-    <form
-      ref={formRef}
-      onSubmit={submitHandler}
-      className="flex items-end gap-2"
+    <div
+      className={cn(
+        { "mt-5": didSendCode, "mb-7": !didSendCode },
+        "rounded-md border-2 border-green-300 p-2",
+      )}
     >
-      <div
-        className={cn(
-          { "mt-5": didSendCode, "mb-7": !didSendCode },
-          "flex items-end gap-2",
-        )}
+      <form
+        onSubmit={submitHandler}
+        ref={formRef}
+        className="flex items-end gap-2"
       >
         <LabelInput
           label="email"
           name="newEmail"
           defaultValue={email || ""}
+          focus={true}
           onChange={(e) => setDiffEmail(e.target.value !== email)}
+          onKeyDown={(e) => e.key === "Escape" && toggleEditing()}
           className="w-full"
           error={validError}
         />
@@ -94,13 +104,15 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
             {didSendCode ? "Resend" : "Send"} Verify Code
           </Button>
         )}
-      </div>
+      </form>
+
       {didSendCode && (
         <div className="flex items-end gap-3">
           <LabelInput
             label="Email change code (until 2 min)"
             type="text"
             name="emailChangeCode"
+            ref={codeRef}
             error={validError}
             placeholder="input code..."
           />
@@ -113,6 +125,6 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
           </Button>
         </div>
       )}
-    </form>
+    </div>
   );
 }

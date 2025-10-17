@@ -1,39 +1,61 @@
+"use client";
+
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
+import type { ValidError } from "@/lib/validator";
 import { CheckLineIcon, UndoDotIcon } from "lucide-react";
-import { type ActionDispatch, useActionState } from "react";
-import { sendResetPasswordMail } from "../sign/sign.action";
-type Props = {
-  toggleEditing: ActionDispatch<[]>;
-};
+import { useActionState, type ActionDispatch } from "react";
+import { updatePassword } from "../sign/sign.action";
 
-export default function PasswordChanger({ toggleEditing }: Props) {
-  const [validError, makeChangePassword, isSending] = useActionState(
-    sendResetPasswordMail,
+export default function PasswordChanger({
+  toggleEditing,
+}: {
+  toggleEditing: ActionDispatch<[]>;
+}) {
+  const [validError, changePassword, isPending] = useActionState(
+    async (_: ValidError | undefined, formData: FormData) => {
+      const err = await updatePassword(formData);
+      if (err) return err;
+      toggleEditing();
+    },
     undefined,
   );
 
   return (
-    <form
-      onResetCapture={toggleEditing}
-      action={makeChangePassword}
-      className="flex items-end gap-3"
-    >
+    <form className="rounded-md border-2 border-red-300 p-3">
       <LabelInput
         label="Current Password"
         name="curr_passwd"
         type="password"
         error={validError}
         placeholder="current password..."
-        className="flex-1"
+      />
+      <LabelInput
+        label="New Password"
+        name="passwd"
+        type="password"
+        error={validError}
+        placeholder="new password..."
+      />
+      <LabelInput
+        label="New Password Confirm"
+        name="passwd2"
+        type="password"
+        error={validError}
+        placeholder="new password confirm..."
       />
 
-      <div className="mt-3 flex justify-center gap-5">
-        <Button type="reset" variant={"outline"}>
+      <div className="mt-4 flex justify-center gap-5">
+        <Button onClick={toggleEditing} type="reset" variant={"outline"}>
           <UndoDotIcon /> Cancel
         </Button>
-        <Button type="submit" disabled={isSending} variant={"primary"}>
-          <CheckLineIcon /> Send Verify Code
+        <Button
+          formAction={changePassword}
+          type="submit"
+          variant={"destructive"}
+          disabled={isPending}
+        >
+          <CheckLineIcon /> Change Password
         </Button>
       </div>
     </form>

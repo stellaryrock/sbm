@@ -2,6 +2,8 @@
 
 import LabelEditor from "@/components/label-editor";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { PencilIcon } from "lucide-react";
 import type { User } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useReducer } from "react";
@@ -15,7 +17,8 @@ type Props = {
   } & User;
 };
 export default function ChangeProfile({ user }: Props) {
-  const { update, data } = useSession({ required: true });
+  // const { update } = useSession({ required: true });
+  const { update } = useSession();
   const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, false);
   const [isEditingPassword, toggleEditingPassword] = useReducer(
     (pre) => !pre,
@@ -39,38 +42,33 @@ export default function ChangeProfile({ user }: Props) {
         saveAction={changeNickname}
       />
 
-      {isEditingEmail ? (
-        <EmailChanger
-          toggleEditing={toggleEditingEmail}
-          email={data?.user.email}
-        />
-      ) : (
-        <Button
-          onClick={toggleEditingEmail}
-          variant={"success"}
-          className="mt-3"
-        >
-          Change {data?.user.email}
-        </Button>
-      )}
-      {/* <LabelEditor
-        saveAction={changePassword}
-        label={"password"}
-        submitLabel="Send Verify Email"
-        name="curr_passwd"
-        type="password"
-      /> */}
-      {isEditingPassword ? (
-        <PasswordChanger toggleEditing={toggleEditingPassword} />
-      ) : (
-        <Button
-          onClick={toggleEditingPassword}
-          variant={"destructive"}
-          className="mt-3"
-        >
-          Change Password
-        </Button>
-      )}
+      <div className={cn({ "w-[80%]": !isEditingEmail })}>
+        {isEditingEmail ? (
+          <EmailChanger toggleEditing={toggleEditingEmail} email={user.email} />
+        ) : (
+          <Button
+            onClick={toggleEditingEmail}
+            variant={"success"}
+            className="mt-3"
+          >
+            <PencilIcon /> {user.email}
+          </Button>
+        )}
+      </div>
+
+      <div className={cn({ "w-[80%]": !isEditingPassword })}>
+        {isEditingPassword ? (
+          <PasswordChanger toggleEditing={toggleEditingPassword} />
+        ) : (
+          <Button
+            onClick={toggleEditingPassword}
+            variant={"destructive"}
+            className="mt-3"
+          >
+            <PencilIcon /> Password
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

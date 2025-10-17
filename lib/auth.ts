@@ -31,11 +31,8 @@ export const {
     }),
   ],
   callbacks: {
-    async signIn({ user, profile, account }) {
+    async signIn({ user, account }) {
       const isCredential = account?.provider === "credentials";
-      console.log("🚀 ~ isCredential:", isCredential);
-      console.log("🚀 ~ profile:", profile);
-      console.log("🚀 ~ user:", user);
       const { email, name: nickname, image } = user;
       if (!email) return false;
 
@@ -71,7 +68,7 @@ export const {
       return true;
     },
 
-    async jwt({ token, user, trigger, account, session }) {
+    async jwt({ token, user, trigger, session }) {
       const userData = trigger === "update" ? session : user;
       if (userData) {
         token.id = userData.id;
@@ -79,17 +76,8 @@ export const {
         token.name = userData.name || userData.nickname;
         token.image = userData.image;
         token.isadmin = userData.isadmin;
-
-        // jwt 연장
-        // if (account) {
-        //   console.log("🚀 ~ jwt ~ account:", account);
-        //   // accesstoken, id_token (jwt)
-        //   token.accessToken = account?.access_token;
-        //   token.accessTokenExpires =
-        //     Date.now() + (account.expires_in ?? 0) * 1000;
-        //   token.refreshToken = account.refresh_token;
-        // }
       }
+      token.exp = Math.floor(Date.now() / 1000) + 10 * 60;
       return token;
     },
 
@@ -100,6 +88,7 @@ export const {
         session.user.email = token.email as string;
         session.user.image = token.image?.toString();
         session.user.isadmin = token.isadmin;
+        if (token.exp) session.expires = new Date(token.exp * 1000);
       }
       return session;
     },

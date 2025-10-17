@@ -5,11 +5,12 @@ import prisma, { findMemberByEmail } from "@/lib/db";
 import { newToken, uniqId, uniqNumId } from "@/lib/utils";
 import {
   comparePassword,
+  encryptPassword,
   existsEmail,
   validate,
+  validateAsync,
   type ValidError,
 } from "@/lib/validator";
-import { hash } from "bcryptjs";
 import { existsSync } from "fs";
 import { writeFile } from "fs/promises";
 import { AuthError } from "next-auth";
@@ -109,7 +110,7 @@ export const regist = async (
       email: { errors: ["Duplicated Email Address!"], value: email },
     };
 
-  const passwd = await hash(orgPasswd, 10);
+  const passwd = await encryptPassword(orgPasswd);
   const emailcheck = newToken();
   const emailType = "regist";
 
@@ -179,7 +180,7 @@ export const resetPassword = async (
   if (err) return err;
 
   const { email, passwd2, emailcheck } = data;
-  const passwd = await hash(passwd2, 10);
+  const passwd = await encryptPassword(passwd2);
   await prisma.member.update({
     where: { email, emailcheck },
     data: { passwd, emailcheck: null, emailType: null },
@@ -283,18 +284,15 @@ export const sendEmailChangeCode = async (formData: FormData) => {
   const session = await auth();
   if (!session?.user || !session.user.email) throw new Error("Need Login!");
 
-  const { email } = session.user;
+  const { email, name } = session.user;
 
   const zobj = z.object({
     newEmail: z.email(),
   });
-
   const [err, data] = validate(zobj, formData);
-
   if (err) return err;
 
   const { newEmail } = data;
-
   const existsErr = await existsEmail(newEmail, "newEmail");
   if (existsErr) return existsErr;
 
@@ -304,10 +302,6 @@ export const sendEmailChangeCode = async (formData: FormData) => {
     data: { emailcheck },
   });
 
-  /*
-  Error [PrismaClientKnownRequestError]:
-  Invalid `prisma.member.update()` invocation:
-  */
   setTimeout(
     async () => {
       await prisma.member.update({
@@ -319,8 +313,9 @@ export const sendEmailChangeCode = async (formData: FormData) => {
   );
 
   await sendmailByFetch({
-    email,
+    email: newEmail,
     emailcheck,
+    nickname: name || "",
     emailType: "email-change-code",
   });
 };
@@ -429,49 +424,65 @@ export const sendResetPasswordMail = async (
   });
 };
 
-export const changePasswd = async (
-  _: ValidError | undefined,
-  formData: FormData,
-) => {
+export const updatePassword = async (formData: FormData) => {
   const session = await auth();
-  if (!session?.user || !session?.user.email || !session?.user.name)
-    redirect(`/sign`);
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
 
   const { email } = session.user;
+  const mbr = await findMemberByEmail(email, true);
 
   const zobj = z
     .object({
-      curr_passwd: z.string().min(6, "6자 이상 입력하세요."),
-      passwd: z.string().min(6, "6자 이상 입력하세요"),
-      passwd2: z.string().min(6, "6자 이상 입력하세요."),
+      curr_passwd: z.string().optional(),
+      passwd: z.string().min(6),
+      passwd2: z.string().min(6),
     })
-    .refine(({ passwd, passwd2 }) => passwd === passwd2, {
-      path: ["passwd2"],
-      message: "비밀번호가 일치하지 않습니다.",
+    .superRefine(async ({ curr_passwd, passwd, passwd2 }, ctx) => {
+      const preIssues = ctx.issues;
+      ctx.issues = [];
+
+      const isMatchPassword = await comparePassword(
+        curr_passwd || "",
+        mbr?.passwd || "",
+      );
+      if (!isMatchPassword)
+        ctx.addIssue({
+          code: "custom",
+          message: "Not Match the current password!",
+          path: ["curr_passwd"],
+        });
+
+      if (passwd !== passwd2)
+        ctx.addIssue({
+          code: "custom",
+          message: "Not Match the password confirm!",
+          path: ["passwd2"],
+        });
+
+      ctx.issues = [...ctx.issues, ...preIssues];
     });
 
-  const [err, data] = validate(zobj, formData);
-
+  const [err, data] = await validateAsync(zobj, formData);
   if (err) return err;
 
-  const { curr_passwd: orgPasswd, passwd } = data;
-
-  const mbr = await findMemberByEmail(session.user.email, true);
-  if (!mbr) redirect(`/sign`);
-  if (!mbr.passwd)
-    return { curr_passwd: { errors: ["SNS 계정으로 가입된 회원입니다."] } };
-
-  const pwMatched = comparePassword(orgPasswd, passwd);
-  if (!pwMatched)
-    return { curr_passwd: { errors: ["비밀번호를 확인하세요."] } };
-
-  const newPasswd = await hash(passwd, 10);
-
-  // success
+  const passwd = await encryptPassword(data.passwd);
   await prisma.member.update({
     where: { email },
-    data: { passwd: newPasswd },
+    data: { passwd },
+  });
+};
+
+export const withdraw = async () => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
+
+  // console.log('****>>', Object.fromEntries(formData.entries()));
+  const { email } = session.user;
+  const outdt = new Date().toISOString().split("T")[0];
+  await prisma.member.update({
+    where: { email },
+    data: { outdt },
   });
 
-  return signOut({ redirectTo: `/sign?email=${email}` });
+  await logout();
 };

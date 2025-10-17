@@ -1,15 +1,18 @@
 import ImageUploader from "@/components/image-uploader";
-import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { use } from "react";
 import SignOutButton from "../../components/signout-button";
 import { updateProfileImage } from "../sign/sign.action";
 import ChangeProfile from "./change-profile";
+import WithdrawButton from "./withdraw-button";
 
 export default function My() {
   const session = use(auth());
+
+  if (session?.user.name)
+    console.log("🚀 ~ My ~ session name:", session.user.name);
+
   if (!session?.user?.name) redirect("/sign");
 
   const { name, image } = session.user;
@@ -25,14 +28,16 @@ export default function My() {
               src={image || ""}
               alt={name}
             />
-            <div className="flex items-center justify-around">
-              <Link href="/api/auth/signout">Goto SignOut</Link>
-              <SignOutButton />
-              <Button variant="destructive">Widthrow</Button>
-            </div>
           </div>
           <div className="col-span-2">
             <ChangeProfile user={session.user} />
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          <SignOutButton name={name} />
+          <div className="col-span-2 text-right">
+            <WithdrawButton />
           </div>
         </div>
       </div>

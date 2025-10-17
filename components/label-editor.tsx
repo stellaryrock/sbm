@@ -52,11 +52,6 @@ export default function LabelEditor({
 
     if (chk !== isDirty) setDirty(chk);
   };
-  //const debouncedChkDirty = useDebounce(chkDirty, 500);
-
-  // const keyUpHandler = (e: KeyboardEvent<HTMLInputElement>) => {
-  //   debouncedChkDirty();
-  // };
 
   const [isPending, startTransition] = useTransition();
 
@@ -107,7 +102,7 @@ export default function LabelEditor({
         className={cn(className, "w-full")}
         inputClassName={inputClassName}
         error={error || validError}
-        onKeyUp={(e) => {
+        onKeyDown={(e) => {
           e.stopPropagation();
           chkDirty();
         }}
