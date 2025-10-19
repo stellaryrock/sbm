@@ -268,7 +268,7 @@ export const updateProfileImage = async (formData: FormData) => {
 
   const buffer = Buffer.from(await data.image.arrayBuffer());
   await writeFile(filePath, buffer);
-  const image = `profiles/${fileName}`;
+  const image = `/profiles/${fileName}`;
 
   const mbr = await prisma.member.update({
     where: { email },

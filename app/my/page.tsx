@@ -18,7 +18,7 @@ export default function My() {
   const { name, image } = session.user;
 
   return (
-    <div className="grid h-full place-items-center">
+    <div className="container mx-auto grid h-full place-items-center">
       <div className="w-full rounded-md border p-5 text-center shadow-md">
         <h1 className="mb-5 text-3xl">My Page</h1>
         <div className="grid grid-cols-3 gap-3">

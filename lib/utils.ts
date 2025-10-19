@@ -2,8 +2,8 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 } from "uuid";
 
-export { default as DummyProfile } from "@/public/dummy_profile.png";
-
+export { default as DummyProfile } from "@/public/profile_dummy.png";
+export const DummyProfileFile = "/profile_dummy.png";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

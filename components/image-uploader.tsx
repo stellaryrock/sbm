@@ -3,6 +3,7 @@ import type { UpdateProfileImageReturn } from "@/app/sign/sign.action";
 import { cn, DummyProfile } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import Image, { type StaticImageData } from "next/image";
+import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   type DragEvent,
@@ -20,6 +21,8 @@ type Props = {
 
 export default function ImageUploader({ src, alt, changeImage }: Props) {
   const { update } = useSession();
+  const router = useRouter();
+
   const fileRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [img, setImg] = useState(src);
@@ -69,6 +72,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
         return setErrorMsgs(err.image.errors);
 
       await update(mbr);
+      router.refresh();
     });
   };
 

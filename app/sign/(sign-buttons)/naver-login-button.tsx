@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { loginNaver } from "../sign.action";
 
-type Props = {
-  redirectTo: string;
-};
-
-export function NaverLoginButton({ redirectTo }: Props) {
+export function NaverLoginButton({
+  redirectTo,
+}: {
+  redirectTo: string | null;
+}) {
   const makeNaverLogin = async () => {
     "use server";
-    loginNaver(redirectTo);
+    await loginNaver(redirectTo);
   };
 
   return (
