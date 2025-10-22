@@ -146,7 +146,6 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           name="passwd"
           error={validError}
           placeholder="your password.."
-          className="my-3x"
         />
 
         <LabelInput
@@ -155,7 +154,6 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           name="passwd2"
           error={validError}
           placeholder="your password.."
-          className="my-3x"
         />
 
         <LabelInput
@@ -164,7 +162,6 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           name="nickname"
           error={validError}
           placeholder="your nickname.."
-          className="my-3x"
         />
 
         <Button

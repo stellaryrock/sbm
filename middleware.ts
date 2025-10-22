@@ -14,12 +14,14 @@ export async function middleware(req: NextRequest) {
   //const ctoken = req.cookies.get(SALT);
   // console.log("🚀 ~ middleware ~ ctoken:", ctoken);
   const { pathname } = req.nextUrl;
-  if (!token && NEED_COOKIES.includes(pathname)) return NextResponse.next();
-  if (!token)
+  if (!token) {
+    if (NEED_COOKIES.includes(pathname) || pathname.includes("bookcase/"))
+      return NextResponse.next();
+
     return NextResponse.redirect(
       new URL(`/sign?redirectTo=${pathname}`, req.url),
     );
-
+  }
   // if (ctoken) {
   //   const decToken = await decode({
   //     token: ctoken.value,

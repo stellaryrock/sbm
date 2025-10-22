@@ -1,8 +1,18 @@
+"only server";
+
 import { PrismaClient } from "@/lib/generated/prisma/client";
 
-const prisma = new PrismaClient();
+const newInstance = () => new PrismaClient();
+
+// biome-ignore lint/suspicious/noShadowRestrictedNames: for too many connections problems
+declare const globalThis: {
+  prismaGlobal: ReturnType<typeof newInstance>;
+} & typeof global;
+
+const prisma = globalThis.prismaGlobal ?? new PrismaClient();
 
 export default prisma;
+globalThis.prismaGlobal = prisma;
 
 export const findMemberByEmail = async (
   email: string,
@@ -67,4 +77,21 @@ export const findMemberByIdWithCount = async (id: number | string) =>
       _count: { select: { Book: true, Mark: true } },
     },
     where: { id: Number(id) },
+  });
+
+export type BookAllColumn = Awaited<ReturnType<typeof findBookWithMarkById>>;
+export type BookData = Omit<
+  NonNullable<BookAllColumn>,
+  "Mark" | "createdAt" | "updatedAt"
+>;
+
+export const findBookById = async (id: number) =>
+  prisma.book.findUnique({
+    where: { id },
+  });
+
+export const findBookWithMarkById = async (id: number) =>
+  prisma.book.findUnique({
+    where: { id },
+    include: { Mark: true },
   });

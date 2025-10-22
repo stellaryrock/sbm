@@ -1,9 +1,16 @@
+import IconLabel from "@/components/icon-label";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/user-avatar";
-import { findMemberByIdWithCount } from "@/lib/db";
-import { PlusIcon } from "lucide-react";
+import prisma, { findMemberByIdWithCount } from "@/lib/db";
+import {
+  AlbumIcon,
+  BookMarkedIcon,
+  PlusIcon,
+  UserRoundPlusIcon,
+} from "lucide-react";
 import { use } from "react";
 import Book from "./book";
+import BookDialog from "./book-dialog";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -14,30 +21,44 @@ export default function BookcaseNickname({ params }: Props) {
   const mbr = use(findMemberByIdWithCount(id));
   if (!mbr) return <h1 className="text-2xl">User Not Found</h1>;
 
+  const books = use(
+    prisma.book.findMany({
+      where: { member: Number(id) },
+      include: { Mark: true },
+    }),
+  );
+
   return (
-    <div className="my-2 flex max-h-full flex-col">
+    <div className="flex max-h-full flex-col px-2 pt-2">
       <h1 className="flex items-center justify-between font-semibold text-2xl">
         <div className="flex items-center">
           {/* <UserAvatar id={id} withName={true} /> */}
           {mbr && <UserAvatar member={mbr} withName={true} />}
           <span className="ml-2 font-medium text-green-600">Bookcase</span>
         </div>
-        <span className="text-lg text-muted-foreground">
-          {mbr._count.Book} Books, {mbr._count.Mark} Marks, 50 Followers
+        <span className="flex gap-3 text-lg">
+          <IconLabel icon={<BookMarkedIcon />}>{mbr._count.Book}</IconLabel>
+          <IconLabel icon={<AlbumIcon />} noti="primary">
+            {mbr._count.Mark}
+          </IconLabel>
+          <IconLabel icon={<UserRoundPlusIcon />} noti="destructive">
+            50
+          </IconLabel>
         </span>
       </h1>
 
-      <div className="my-2 flex gap-2 overflow-x-scroll">
-        <Book />
-        <Book />
-        <Book />
-
-        <Button
-          variant={"ghost"}
-          className="flex w-96 justify-start bg-slate-200 font-semibold text-lg hover:bg-slate-300"
-        >
-          <PlusIcon /> Add a Book
-        </Button>
+      <div className="flex gap-3 overflow-x-auto py-2">
+        {books.map((book) => (
+          <Book key={book.id} book={book} />
+        ))}
+        <BookDialog>
+          <Button
+            variant={"ghost"}
+            className="flex w-96 justify-start bg-slate-200 font-semibold text-lg hover:bg-slate-300"
+          >
+            <PlusIcon /> Add a Book
+          </Button>
+        </BookDialog>
       </div>
     </div>
   );
