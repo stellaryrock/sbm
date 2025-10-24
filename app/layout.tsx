@@ -1,3 +1,4 @@
+import AlerterProvider from "@/hooks/contexts/alerter";
 import { auth } from "@/lib/auth";
 import { BookMarkedIcon } from "lucide-react";
 import type { Metadata } from "next";
@@ -42,21 +43,23 @@ export default function RootLayout({
             disableTransitionOnChange
             enableSystem
           >
-            <div className="container mx-auto flex h-screen flex-col justify-center">
-              <header className="flex justify-between border-green-400 border-b-1 px-2">
-                <Link
-                  href="/"
-                  className="flex items-center font-semibold text-3xl text-green-500 tracking-tight"
-                >
-                  <BookMarkedIcon size={28} /> BookMark
-                </Link>
-                <Nav />
-              </header>
-              <main className="flex-1 overflow-auto px-2">{children}</main>
-              <footer className="text-center text-green-500">
-                &#169; indiflex SeniorCoding 2025
-              </footer>
-            </div>
+            <AlerterProvider>
+              <div className="container mx-auto flex h-screen flex-col justify-center">
+                <header className="flex justify-between border-green-400 border-b-1 px-2">
+                  <Link
+                    href="/"
+                    className="flex items-center font-semibold text-3xl text-green-500 tracking-tight"
+                  >
+                    <BookMarkedIcon size={28} /> BookMark
+                  </Link>
+                  <Nav />
+                </header>
+                <main className="flex-1 overflow-auto px-2">{children}</main>
+                <footer className="text-center text-green-500">
+                  &#169; indiflex SeniorCoding 2025
+                </footer>
+              </div>
+            </AlerterProvider>
           </ThemeProvider>
         </SessionProvider>
       </body>

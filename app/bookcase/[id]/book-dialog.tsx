@@ -1,8 +1,8 @@
 "use client";
 
+import CheckSwitch from "@/components/check-switch";
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useAlerter } from "@/hooks/contexts/alerter";
 import type { BookData } from "@/lib/db";
 import type { ValidError } from "@/lib/validator";
 import { useRouter } from "next/navigation";
-import { useActionState, type PropsWithChildren } from "react";
+import { useActionState, useState, type PropsWithChildren } from "react";
 import { deleteBook, saveBook } from "./book.action";
 
 export default function BookDialog({
@@ -34,22 +35,43 @@ export default function BookDialog({
 }: PropsWithChildren<{
   book?: BookData;
 }>) {
+  // const [ispublic, setPublic] = useState(false);
+  // const [withdel, setWithdel] = useState(false);
+
+  const { confirm, alert } = useAlerter();
+  const [isOpen, setOpen] = useState(false);
+
   const [validError, save, isPending] = useActionState(
     async (_: ValidError | undefined, formData: FormData) => {
+      //formData.set("ispublic", ispublic ? "on" : "");
+      formData.set("id", String(book.id));
       const err = await saveBook(formData);
       if (err) return err;
 
       router.refresh();
+      setOpen(false);
     },
     undefined,
   );
   const router = useRouter();
   const remove = async () => {
-    await deleteBook(book.id);
+    // if (!confirm("Are u sure??")) return;
+    const ret = await alert({ title: "Are u sure??" });
+    if (!ret) return;
+
+    const err = await deleteBook(book.id);
+    if (err) {
+      console.log("Err>>", err.id.errors[0]);
+      setOpen(false);
+      await confirm({ title: err.id.errors[0] });
+      return;
+    }
+
     router.refresh();
+    setOpen(false);
   };
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form action={save} className="my-5">
@@ -58,37 +80,31 @@ export default function BookDialog({
             <DialogDescription>descript...</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <LabelInput label={"title"} name="title" error={validError} />
+            <LabelInput
+              label={"title"}
+              name="title"
+              defaultValue={book.title}
+              error={validError}
+            />
             <div className="flex items-center gap-3">
-              <Checkbox
-                id="ispublic"
+              <CheckSwitch
                 name="ispublic"
-                defaultChecked={book.ispublic}
+                label="Public Book"
+                checkValue={book.ispublic}
+                error={validError}
+                type={"checkbox"}
               />
-              <Label
-                className="font-semibold text-sm capitalize"
-                htmlFor="ispublic"
-              >
-                Public
-              </Label>
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <Checkbox
-                  id="withdel"
+                <CheckSwitch
+                  label="Open with deletion"
                   name="withdel"
-                  defaultChecked={book.withdel || !!validError?.withdel?.value}
+                  error={validError}
+                  checkValue={book.withdel}
+                  type={"switch"}
                 />
-                <Label
-                  className="font-semibold text-sm capitalize"
-                  htmlFor="withdel"
-                >
-                  Open With Deletion
-                </Label>
               </div>
-              <p className="mt-1 text-red-500 text-sm">
-                {validError?.withdel?.errors[0]}
-              </p>
             </div>
             <div className="flex flex-col gap-3">
               <Label

@@ -6,12 +6,15 @@ import { auth } from "@/lib/auth";
 import { findBookWithMarkById, type BookAllColumn } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import {
+  AlbumIcon,
+  BookKeyIcon,
   CopyXIcon,
+  HeartPlusIcon,
   MoreHorizontalIcon,
   PlusIcon,
-  UserRoundPlusIcon,
 } from "lucide-react";
 import { use } from "react";
+import BookDialog from "./book-dialog";
 import Mark from "./mark";
 
 type Props =
@@ -40,22 +43,26 @@ export default function Book({ id, book }: Props) {
       <div className="flex items-center justify-between pr-2">
         <h1
           className={cn(
-            "m-2 w-36 truncate font-medium text-xl tracking-tighter",
+            "flex items-center truncate p-2 font-medium text-xl tracking-tighter",
             ispublic
               ? "text-green-500 text-shadow-green-300"
               : "text-muted-foreground text-shadow-gray-300",
           )}
+          title={remark || title}
         >
+          {!ispublic && <BookKeyIcon />}
           {title}
         </h1>
 
         {isMine ? (
-          <Button
-            variant={"ghost"}
-            className="font-semibold text-lg hover:bg-slate-300"
-          >
-            <MoreHorizontalIcon />
-          </Button>
+          <BookDialog book={book}>
+            <Button
+              variant={"ghost"}
+              className="font-semibold text-lg hover:bg-slate-300"
+            >
+              <MoreHorizontalIcon />
+            </Button>
+          </BookDialog>
         ) : (
           <Button
             variant={"ghost"}
@@ -63,7 +70,7 @@ export default function Book({ id, book }: Props) {
           >
             <IconLabel
               noti={"success"}
-              icon={<UserRoundPlusIcon className="text-green-500" />}
+              icon={<HeartPlusIcon className="text-green-500" />}
             >
               30
             </IconLabel>
@@ -79,15 +86,18 @@ export default function Book({ id, book }: Props) {
         <div className="my-1 flex items-center justify-between pr-2 font-medium">
           <Button
             variant={"ghost"}
-            className="flex w-[80%] justify-start font-semibold text-lg hover:bg-slate-300"
+            className="flex w-[60%] justify-start font-semibold text-lg hover:bg-slate-300"
           >
             <PlusIcon /> Add a Mark
           </Button>
-          {true && (
-            <ToolTip content={"open with deletion"}>
-              <CopyXIcon className="text-red-500" />
-            </ToolTip>
-          )}
+          <div className="flex gap-2">
+            <IconLabel icon={<AlbumIcon />}>99</IconLabel>
+            {withdel && (
+              <ToolTip content={"With Del"}>
+                <CopyXIcon className="text-red-500" />
+              </ToolTip>
+            )}
+          </div>
         </div>
       )}
     </div>

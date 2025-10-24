@@ -2,12 +2,11 @@
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { validate } from "@/lib/validator";
+import { validate, validateAsync } from "@/lib/validator";
 import z from "zod";
 
 export const saveBook = async (formData: FormData) => {
   const session = await auth();
-  console.log("🚀 ~ saveBook ~ session:", session);
   if (!session?.user || !session.user.id) throw new Error("Need Login");
 
   const member = Number(session.user.id);
@@ -28,10 +27,10 @@ export const saveBook = async (formData: FormData) => {
   if (err) return err;
 
   const id = Number(formData.get("id"));
-
+  const { id: userId, isadmin } = session.user;
   if (id) {
     await prisma.book.update({
-      where: { id },
+      where: isadmin ? { id } : { id, member: Number(userId) },
       data: {
         ...data,
         ispublic: data.ispublic === "on",
@@ -50,7 +49,36 @@ export const saveBook = async (formData: FormData) => {
   }
 };
 
-export const deleteBook = async (id: number) =>
-  prisma.book.delete({
-    where: { id },
+export const deleteBook = async (id: number) => {
+  const session = await auth();
+  if (!session?.user || !session.user.id) throw new Error("Need Login");
+
+  // check exists
+  const zobj = z
+    .object({
+      id: z.number(),
+    })
+    .superRefine(async ({ id }, ctx) => {
+      const book = await prisma.book.findUnique({
+        //where: { id },
+        where: { id: id + 10000 },
+      });
+
+      if (!book) {
+        ctx.addIssue({
+          code: "custom",
+          message: `This Book(#${id}) is not exists!`,
+          path: ["id"],
+        });
+      }
+    });
+
+  const [err] = await validateAsync(zobj, { id });
+  if (err) return err;
+
+  const { id: userId, isadmin } = session.user;
+
+  await prisma.book.delete({
+    where: isadmin ? { id } : { id, member: Number(userId) },
   });
+};
