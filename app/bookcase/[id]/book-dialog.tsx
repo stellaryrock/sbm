@@ -38,7 +38,7 @@ export default function BookDialog({
   // const [ispublic, setPublic] = useState(false);
   // const [withdel, setWithdel] = useState(false);
 
-  const { confirm, alert } = useAlerter();
+  const { confirm, alert, prompt } = useAlerter();
   const [isOpen, setOpen] = useState(false);
 
   const [validError, save, isPending] = useActionState(
@@ -56,8 +56,19 @@ export default function BookDialog({
   const router = useRouter();
   const remove = async () => {
     // if (!confirm("Are u sure??")) return;
-    const ret = await alert({ title: "Are u sure??" });
+    const ret = await confirm({ title: "Are u sure??" });
     if (!ret) return;
+
+    const code = await prompt({
+      title: "Inout the code ?",
+      description: "Input the code to delete this book",
+      placeholder: "code...",
+    });
+
+    if (code !== "1234") {
+      await alert({ title: "Not valid code!", variant: "destructive" });
+      return;
+    }
 
     const err = await deleteBook(book.id);
     if (err) {

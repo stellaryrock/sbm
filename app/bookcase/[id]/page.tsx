@@ -18,17 +18,22 @@ type Props = {
 };
 
 export default function BookcaseNickname({ params }: Props) {
-  const session = use(auth());
-  const isMyBookcase = !!session?.user;
-
   const { id } = use(params);
+  const session = use(auth());
+  const isMyBookcase = session?.user.id === id;
   const mbr = use(findMemberByIdWithCount(id));
   if (!mbr) return <h1 className="text-2xl">User Not Found</h1>;
 
   const books = use(
     prisma.book.findMany({
       where: { member: Number(id) },
-      include: { Mark: true },
+      include: {
+        Mark: {
+          include: {
+            _count: { select: { Likes: true, Report: true, Talk: true } },
+          },
+        },
+      },
     }),
   );
 
@@ -59,7 +64,7 @@ export default function BookcaseNickname({ params }: Props) {
           <BookDialog>
             <Button
               variant={"ghost"}
-              className="flex w-96 justify-start bg-slate-200 font-semibold text-lg hover:bg-slate-300"
+              className="flex w-96 justify-start rounded-full bg-slate-200 font-semibold text-lg hover:bg-muted-foreground dark:bg-muted dark:hover:bg-muted-foreground/30"
             >
               <PlusIcon /> Add a Book
             </Button>

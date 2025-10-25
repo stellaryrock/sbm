@@ -38,8 +38,12 @@ export default function Book({ id, book }: Props) {
   const { id: bookId, title, remark, ispublic, member, withdel } = data;
   const session = use(auth());
   const isMine = session?.user.id === String(member);
+  const totalLikesCnt = book?.Mark.reduce(
+    (acc, mark) => acc + mark._count.Likes,
+    0,
+  );
   return (
-    <div className="flex w-80 flex-shrink-0 flex-col justify-start rounded-lg bg-slate-200 pl-2">
+    <div className="flex w-72 flex-shrink-0 flex-col justify-start rounded-lg bg-slate-200 pl-2 dark:bg-muted">
       <div className="flex items-center justify-between pr-2">
         <h1
           className={cn(
@@ -64,23 +68,36 @@ export default function Book({ id, book }: Props) {
             </Button>
           </BookDialog>
         ) : (
-          <Button
-            variant={"ghost"}
-            className="font-semibold text-lg hover:bg-slate-300"
-          >
-            <IconLabel
-              noti={"success"}
-              icon={<HeartPlusIcon className="text-green-500" />}
+          ispublic && (
+            <Button
+              variant={"ghost"}
+              className="font-semibold text-lg hover:bg-slate-300"
             >
-              30
-            </IconLabel>
-          </Button>
+              <IconLabel
+                noti={"success"}
+                icon={<HeartPlusIcon className="text-green-500" />}
+              >
+                30
+              </IconLabel>
+            </Button>
+          )
         )}
       </div>
       <div className="max-h-full space-y-2 overflow-y-scroll rounded-lg pr-2 pb-3">
-        <Mark />
-        <Mark />
-        <Mark />
+        {book?.Mark.length ? (
+          book.Mark.map((mark) => (
+            <Mark
+              key={mark.id}
+              mark={mark}
+              withdel={book.withdel}
+              bookOwner={book.member}
+            />
+          ))
+        ) : (
+          <h1 className="rounded-lg bg-white p-5 font-medium text-muted-foreground text-xl">
+            There is no Marks.
+          </h1>
+        )}
       </div>
       {isMine && (
         <div className="my-1 flex items-center justify-between pr-2 font-medium">
@@ -91,9 +108,14 @@ export default function Book({ id, book }: Props) {
             <PlusIcon /> Add a Mark
           </Button>
           <div className="flex gap-2">
-            <IconLabel icon={<AlbumIcon />}>99</IconLabel>
+            <IconLabel icon={<AlbumIcon />}>{book?.Mark.length}</IconLabel>
+            {ispublic && (
+              <IconLabel icon={<HeartPlusIcon className="text-red-400" />}>
+                {totalLikesCnt}
+              </IconLabel>
+            )}
             {withdel && (
-              <ToolTip content={"With Del"}>
+              <ToolTip content={"With Del"} variant="destructive">
                 <CopyXIcon className="text-red-500" />
               </ToolTip>
             )}

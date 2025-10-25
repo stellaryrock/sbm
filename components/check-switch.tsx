@@ -38,9 +38,11 @@ export default function CheckSwitch({
 
   const Compo = type === "checkbox" ? Checkbox : Switch;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <value not changed when 'on'>
   useEffect(() => {
-    if (value) setChecked(true);
-  }, [value]); // QQQ: error?
+    // type === "checkbox" && console.log("🚀 ~ CheckSwitch ~ value:", value);
+    setChecked(!!value);
+  }, [error]);
 
   return (
     <div>
@@ -63,7 +65,8 @@ export default function CheckSwitch({
           <Input
             type="hidden"
             name={name}
-            value={checked || !!value ? "on" : ""}
+            value={checked ? "on" : ""}
+            onChange={() => {}}
           />
         )}
       </div>

@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
   CircleAlertIcon,
@@ -18,7 +19,7 @@ import {
   TriangleIcon,
 } from "lucide-react";
 import type React from "react";
-import { createContext, use, useState } from "react";
+import { createContext, use, useRef, useState } from "react";
 
 type ContextValueProps = {
   confirm: (options: Options) => Promise<string>;
@@ -41,6 +42,7 @@ type Options = {
   okText?: string;
   cancelText?: string;
   variant?: "default" | "destructive";
+  placeholder?: string;
 };
 
 export default function AlerterProvider({
@@ -51,6 +53,8 @@ export default function AlerterProvider({
   const [isOpen, setOpen] = useState(false);
   const [options, setOptions] = useState<Options>();
   const [resolver, setResolver] = useState<(value: string) => void>(() => {});
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   //   type           destructive              default
   // -------------------------------------------------------
@@ -87,7 +91,7 @@ export default function AlerterProvider({
       {children}
 
       <AlertDialog open={isOpen} onOpenChange={setOpen}>
-        <AlertDialogContent className="w-80 translate-y-[-100px] sm:w-96">
+        <AlertDialogContent className="w-80 translate-y-[-150px] sm:w-96">
           <AlertDialogHeader>
             <AlertDialogTitle
               className={cn("flex items-center gap-2", {
@@ -98,29 +102,41 @@ export default function AlerterProvider({
               {options?.title}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
+              {options?.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {options?.type === "prompt" && (
+            <Input
+              type="text"
+              ref={inputRef}
+              placeholder={options?.placeholder}
+            />
+          )}
           <AlertDialogFooter>
-            {options?.type === "alert" && (
+            {options?.type !== "alert" && (
               <AlertDialogCancel
                 onClick={() => {
-                  console.log("Resolver:", resolver);
                   makeResolver("");
                 }}
               >
-                Cancel
+                {options?.cancelText ?? "Cancel"}
               </AlertDialogCancel>
             )}
             <AlertDialogAction
-              onClick={() => makeResolver("Ok")}
+              onClick={() =>
+                makeResolver(
+                  options?.type === "prompt"
+                    ? (inputRef.current?.value ?? "")
+                    : "OK",
+                )
+              }
               className={cn(
                 options?.variant === "destructive" &&
-                  "bg-destructive/60 hover:bg-destructive/90 dark:bg-destructive/60",
+                  "bg-destructive hover:bg-destructive/90 dark:bg-destructive/60",
               )}
             >
-              Continue
+              {options?.okText ??
+                (options?.type === "alert" ? "Confirm" : "Continue")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

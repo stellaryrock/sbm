@@ -1,4 +1,5 @@
 import AlerterProvider from "@/hooks/contexts/alerter";
+import { StoreProvider } from "@/hooks/contexts/store";
 import { auth } from "@/lib/auth";
 import { BookMarkedIcon } from "lucide-react";
 import type { Metadata } from "next";
@@ -54,7 +55,9 @@ export default function RootLayout({
                   </Link>
                   <Nav />
                 </header>
-                <main className="flex-1 overflow-auto px-2">{children}</main>
+                <StoreProvider>
+                  <main className="flex-1 overflow-auto px-2">{children}</main>
+                </StoreProvider>
                 <footer className="text-center text-green-500">
                   &#169; indiflex SeniorCoding 2025
                 </footer>

@@ -15,7 +15,8 @@ const mbrs = [
             create: {
               link: "https://github.com/indiflex/sbm",
               title: "Mark 1",
-              descript: "seeding...",
+              maker: 1,
+              descript: "seed data",
             },
           },
         },
