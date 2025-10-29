@@ -11,18 +11,15 @@ const NEED_COOKIES = ["/"];
 
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: SECRET });
-  // console.log("🚀 ~ middleware ~ token:", token);
-  //const ctoken = req.cookies.get(SALT);
-  // console.log("🚀 ~ middleware ~ ctoken:", ctoken);
   const { pathname } = req.nextUrl;
+
   if (!token) {
     if (NEED_COOKIES.includes(pathname) || pathname.includes("bookcase/"))
       return NextResponse.next();
 
-    return NextResponse.redirect(
-      new URL(`/sign?redirectTo=${pathname}`, req.url),
-    );
+    return NextResponse.redirect(new URL(`/sign?redirectTo=${pathname}`, req.url));
   }
+
   // if (ctoken) {
   //   const decToken = await decode({
   //     token: ctoken.value,
@@ -40,10 +37,8 @@ export async function middleware(req: NextRequest) {
   //   );
   // }
 
-  // const exp = (token.exp ?? 0) * 1000;
-
   const exp = token.exp ? token.exp * 1000 : 0;
-  console.log("🚀 ~ middleware ~ exp:", token.exp);
+
   if (exp - Date.now() < MAX_AGE * 1000 - REFRESH_THRESHOLD) {
     const res = NextResponse.next();
     const newToken = await encode({
@@ -70,7 +65,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|images|.well-known|bookcase/|profiles|$).*)",
+    "/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|images|.well-known|bookcase/|profiles|dummy|$).*)",
     // "/api/:path",
     "/",
   ],

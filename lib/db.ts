@@ -14,10 +14,7 @@ const prisma = globalThis.prismaGlobal ?? new PrismaClient();
 export default prisma;
 globalThis.prismaGlobal = prisma;
 
-export const findMemberByEmail = async (
-  email: string,
-  passwd: boolean = false,
-) =>
+export const findMemberByEmail = async (email: string, passwd: boolean = false) =>
   prisma.member.findUnique({
     select: {
       id: true,
@@ -51,9 +48,7 @@ export const findMemberByEmailcheck = async (
   });
 
 export type Member = Awaited<ReturnType<typeof findMemberById>>;
-export type MemberWithCount = Awaited<
-  ReturnType<typeof findMemberByIdWithCount>
->;
+export type MemberWithCount = Awaited<ReturnType<typeof findMemberByIdWithCount>>;
 export const findMemberById = async (id: number | string) =>
   prisma.member.findUnique({
     select: {
@@ -96,21 +91,26 @@ export const findBookWithMarkById = async (id: number) =>
     include: {
       Mark: {
         include: {
-          _count: { select: { Likes: true, Report: true, Talk: true } },
+          Likes: { select: { member: true } },
+          Report: { select: { member: true } },
+          Talk: true,
         },
+      },
+      FollowBook: {
+        select: { member: true },
       },
     },
   });
 
-export type MarkAllColumn = NonNullable<
-  Awaited<ReturnType<typeof findMarkWithCount>>
->;
-export type MarkData = Omit<
-  MarkAllColumn,
-  "_count" | "createdAt" | "updatedAt"
->;
+export type MarkAllColumn = NonNullable<Awaited<ReturnType<typeof findMarkWithCount>>>;
+export type MarkData = Omit<MarkAllColumn, "_count" | "createdAt" | "updatedAt">;
 export const findMarkWithCount = async (id: number) =>
   prisma.mark.findUnique({
     where: { id },
-    include: { _count: { select: { Likes: true, Talk: true, Report: true } } },
+    include: {
+      // _count: { select: { Likes: true, Talk: true, Report: true } },
+      Likes: { select: { member: true } },
+      Report: { select: { member: true } },
+      Talk: true,
+    },
   });

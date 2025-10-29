@@ -30,6 +30,7 @@ export default function BookDialog({
     withdel: false,
     member: 0,
     remark: "",
+    FollowBook: [],
   },
   children,
 }: PropsWithChildren<{
@@ -118,10 +119,7 @@ export default function BookDialog({
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <Label
-                className="font-semibold text-sm capitalize"
-                htmlFor="remark"
-              >
+              <Label className="font-semibold text-sm capitalize" htmlFor="remark">
                 Description
               </Label>
               <Textarea

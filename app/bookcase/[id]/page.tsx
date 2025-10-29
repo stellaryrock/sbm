@@ -3,12 +3,7 @@ import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/user-avatar";
 import { auth } from "@/lib/auth";
 import prisma, { findMemberByIdWithCount } from "@/lib/db";
-import {
-  AlbumIcon,
-  BookMarkedIcon,
-  HeartPlusIcon,
-  PlusIcon,
-} from "lucide-react";
+import { AlbumIcon, BookMarkedIcon, HeartPlusIcon, PlusIcon } from "lucide-react";
 import { use } from "react";
 import Book from "./book";
 import BookDialog from "./book-dialog";
@@ -20,6 +15,7 @@ type Props = {
 export default function BookcaseNickname({ params }: Props) {
   const { id } = use(params);
   const session = use(auth());
+  // const userId = Number(session?.user.id);
   const isMyBookcase = session?.user.id === id;
   const mbr = use(findMemberByIdWithCount(id));
   if (!mbr) return <h1 className="text-2xl">User Not Found</h1>;
@@ -28,14 +24,28 @@ export default function BookcaseNickname({ params }: Props) {
     prisma.book.findMany({
       where: { member: Number(id) },
       include: {
+        FollowBook: { select: { member: true } },
         Mark: {
           include: {
-            _count: { select: { Likes: true, Report: true, Talk: true } },
+            // select count(*) from Likes where book = parent.book;
+            // _count: { select: { Likes: true, Report: true, Talk: true } },
+            // Likes: true, // select * from Likes where mark = parent.mark;
+            Likes: { select: { member: true } },
+            Report: { select: { member: true } },
+            Talk: true,
           },
         },
       },
     }),
   );
+
+  const totalFollowsCnt = books.reduce((acc, cur) => acc + cur.FollowBook.length, 0);
+
+  // books.forEach((book) => {
+  //   book.Mark.forEach((mark) => {
+  //     mark.iliked = mark.Likes.map((like) => like.member).includes(userId);
+  //   });
+  // });
 
   return (
     <div className="flex max-h-full flex-col px-2 pt-2">
@@ -51,7 +61,7 @@ export default function BookcaseNickname({ params }: Props) {
             {mbr._count.Mark}
           </IconLabel>
           <IconLabel icon={<HeartPlusIcon />} noti="destructive">
-            50
+            {totalFollowsCnt}
           </IconLabel>
         </span>
       </h1>

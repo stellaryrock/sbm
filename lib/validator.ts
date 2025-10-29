@@ -24,8 +24,7 @@ const validErrorWithData = (
       ? Object.fromEntries(formDataOrObject.entries())
       : formDataOrObject;
 
-  const err = z.treeifyError(error as z.ZodError<typeof obj>)
-    .properties as ValidError;
+  const err = z.treeifyError(error as z.ZodError<typeof obj>).properties as ValidError;
   for (const [prop, value] of Object.entries(obj)) {
     if (prop.startsWith("$")) continue;
     if (!err[prop]) err[prop] = { errors: [] };
@@ -36,9 +35,7 @@ const validErrorWithData = (
 
 export const validateAsync = async <T extends z.ZodObject>(
   zobj: T,
-  formDataOrObj:
-    | FormData
-    | Record<string, FormDataEntryValue | string | unknown>,
+  formDataOrObj: FormData | Record<string, FormDataEntryValue | string | unknown>,
 ): Promise<[ValidError] | [undefined, z.core.output<T>]> => {
   const obj =
     formDataOrObj instanceof FormData
@@ -86,7 +83,7 @@ export const comparePassword = (p1: string | undefined, p2: string) =>
   compare(p1 || "", p2);
 
 export const existsFile = (filePath: string | undefined | null) => {
-  if (!filePath) return filePath;
+  if (!filePath || filePath.startsWith("http")) return filePath;
 
   const fullPath = path.join(process.cwd(), "public", filePath);
   return existsSync(fullPath) ? filePath : null;

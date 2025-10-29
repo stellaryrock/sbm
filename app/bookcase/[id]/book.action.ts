@@ -5,11 +5,17 @@ import prisma from "@/lib/db";
 import { validate, validateAsync } from "@/lib/validator";
 import z from "zod";
 
-export const saveBook = async (formData: FormData) => {
+const checkLogin = async () => {
   const session = await auth();
   if (!session?.user || !session.user.id) throw new Error("Need Login");
 
-  const member = Number(session.user.id);
+  return session.user;
+};
+
+export const saveBook = async (formData: FormData) => {
+  const user = await checkLogin();
+
+  const member = Number(user.id);
 
   const zobj = z
     .object({
@@ -27,7 +33,7 @@ export const saveBook = async (formData: FormData) => {
   if (err) return err;
 
   const id = Number(formData.get("id"));
-  const { id: userId, isadmin } = session.user;
+  const { id: userId, isadmin } = user;
   if (id) {
     await prisma.book.update({
       where: isadmin ? { id } : { id, member: Number(userId) },
@@ -47,13 +53,6 @@ export const saveBook = async (formData: FormData) => {
       },
     });
   }
-};
-
-const checkLogin = async () => {
-  const session = await auth();
-  if (!session?.user || !session.user.id) throw new Error("Need Login");
-
-  return session.user;
 };
 
 export const deleteBook = async (id: number) => {
@@ -88,7 +87,7 @@ export const deleteBook = async (id: number) => {
   });
 };
 
-export const likesAndReports = async (member: number) => {
+export const likesAndReportsWithFollows = async (member: number) => {
   const ilikes = await prisma.likes.findMany({
     where: { member },
     select: { mark: true },
@@ -99,7 +98,12 @@ export const likesAndReports = async (member: number) => {
     select: { mark: true },
   });
 
-  return [ilikes, ireports];
+  const ifollows = await prisma.followBook.findMany({
+    where: { member },
+    select: { book: true },
+  });
+
+  return [ilikes, ireports, ifollows] as const;
 };
 
 export const deleteMark = async (id: number, bookOwner: number) => {
@@ -118,4 +122,56 @@ export const deleteMark = async (id: number, bookOwner: number) => {
   await prisma.mark.delete({
     where: { id },
   });
+};
+
+export const toggleFollowBooks = async (book: number) => {
+  const { id: userId } = await checkLogin();
+  const member = Number(userId);
+
+  const followCnt = await prisma.followBook.count({
+    where: { book },
+  });
+
+  // await new Promise((resolve) => setTimeout(resolve, 3000));
+  // if (book === 17) throw new Error();
+
+  if (followCnt > 0)
+    return prisma.followBook.delete({
+      where: { book_member: { book, member } },
+    });
+  else
+    return prisma.followBook.create({
+      data: { book, member },
+    });
+};
+
+export const toggleLikesOrReportMark = async (
+  mark: number,
+  type: "likes" | "reports",
+) => {
+  const { id: userId } = await checkLogin();
+  const member = Number(userId);
+
+  // const isLikes = type === 'likes';
+  // const model = isLikes ? prisma.likes : prisma.report;
+  const data = { mark, member };
+  const where = { where: data };
+  const whereMarkMember = { where: { mark_member: data } };
+
+  // await new Promise((resolve) => setTimeout(resolve, 3000));
+  // if (mark === 1) throw new Error();
+  // select count(*) from Likes where mark = mark and member = userid;
+  const likesCnt = await (type === "likes"
+    ? prisma.likes.count(where)
+    : prisma.report.count(where));
+
+  if (likesCnt > 0) {
+    return type === "likes"
+      ? prisma.likes.delete(whereMarkMember)
+      : prisma.report.delete(whereMarkMember);
+  } else {
+    return type === "likes"
+      ? prisma.likes.create({ data })
+      : prisma.report.create({ data });
+  }
 };

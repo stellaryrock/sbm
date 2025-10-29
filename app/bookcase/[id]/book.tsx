@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { use } from "react";
 import BookDialog from "./book-dialog";
+import FollowIcon from "./follow";
 import Mark from "./mark";
 
 type Props =
@@ -29,22 +30,24 @@ type Props =
 
 export default function Book({ id, book }: Props) {
   const data = book ? book : use(findBookWithMarkById(id));
+
   if (!data)
     return (
-      <h1 className="font-semibold text-lg text-muted-foreground">
-        Book is not Found!
-      </h1>
+      <h1 className="font-semibold text-lg text-muted-foreground">Book is not Found!</h1>
     );
+
   const { id: bookId, title, remark, ispublic, member, withdel } = data;
   const session = use(auth());
   const isMine = session?.user.id === String(member);
-  const totalLikesCnt = book?.Mark.reduce(
-    (acc, mark) => acc + mark._count.Likes,
-    0,
-  );
+
+  //const totalLikesCnt = book?.Mark.reduce((acc, mark) => acc + mark._count.Likes, 0);
+
   return (
     <div className="flex w-72 flex-shrink-0 flex-col justify-start rounded-lg bg-slate-200 pl-2 dark:bg-muted">
       <div className="flex items-center justify-between pr-2">
+        {process.env.NODE_ENV === "development" && (
+          <small className="text-muted-foreground">{bookId}</small>
+        )}
         <h1
           className={cn(
             "flex items-center truncate p-2 font-medium text-xl tracking-tighter",
@@ -59,7 +62,7 @@ export default function Book({ id, book }: Props) {
         </h1>
 
         {isMine ? (
-          <BookDialog book={book}>
+          <BookDialog book={data}>
             <Button
               variant={"ghost"}
               className="font-semibold text-lg hover:bg-slate-300"
@@ -68,19 +71,7 @@ export default function Book({ id, book }: Props) {
             </Button>
           </BookDialog>
         ) : (
-          ispublic && (
-            <Button
-              variant={"ghost"}
-              className="font-semibold text-lg hover:bg-slate-300"
-            >
-              <IconLabel
-                noti={"success"}
-                icon={<HeartPlusIcon className="text-green-500" />}
-              >
-                30
-              </IconLabel>
-            </Button>
-          )
+          ispublic && <FollowIcon book={data} />
         )}
       </div>
       <div className="max-h-full space-y-2 overflow-y-scroll rounded-lg pr-2 pb-3">
@@ -111,7 +102,7 @@ export default function Book({ id, book }: Props) {
             <IconLabel icon={<AlbumIcon />}>{book?.Mark.length}</IconLabel>
             {ispublic && (
               <IconLabel icon={<HeartPlusIcon className="text-red-400" />}>
-                {totalLikesCnt}
+                {data.FollowBook.length}
               </IconLabel>
             )}
             {withdel && (

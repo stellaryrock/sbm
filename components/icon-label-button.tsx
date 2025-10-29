@@ -1,17 +1,18 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { JSX, PropsWithChildren } from "react";
+import type { JSX, MouseEvent, PropsWithChildren } from "react";
 import IconLabel from "./icon-label";
 import ToolTip from "./tool-tip";
 import { Button } from "./ui/button";
 
 type Props = {
   icon: JSX.Element;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   isActive?: boolean;
   isDanger?: boolean;
   tooltip?: string;
+  disabled?: boolean;
 };
 
 export default function IconLabelButton({
@@ -20,6 +21,7 @@ export default function IconLabelButton({
   isActive,
   isDanger,
   tooltip,
+  disabled,
   children,
 }: PropsWithChildren<Props>) {
   return (
@@ -31,10 +33,11 @@ export default function IconLabelButton({
       <Button
         onClick={onClick}
         variant={"ghost"}
+        disabled={disabled}
         className={cn(
           "h-[80%] px-1 py-1 dark:hover:bg-muted-foreground/30",
-          isDanger && "text-red-400",
-          { "px-2": !children },
+          isDanger && "text-destructive",
+          { "px-2": !!children || children === 0 },
         )}
       >
         <IconLabel icon={icon} isActive={isActive} isDanger={isDanger}>
