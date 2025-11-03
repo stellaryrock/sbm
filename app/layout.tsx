@@ -34,9 +34,7 @@ export default function RootLayout({
   const session = use(auth());
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProvider session={session}>
           <ThemeProvider
             attribute="class"
@@ -45,8 +43,9 @@ export default function RootLayout({
             enableSystem
           >
             <AlerterProvider>
-              <div className="container mx-auto flex h-screen flex-col justify-center">
-                <header className="flex justify-between border-green-400 border-b-1 px-2">
+              <div className="flex h-screen flex-col">
+                {/* 모바일 헤더 겹침 */}
+                <header className="flex justify-between border-b px-2">
                   <Link
                     href="/"
                     className="flex items-center font-semibold text-3xl text-green-500 tracking-tight"
@@ -56,7 +55,7 @@ export default function RootLayout({
                   <Nav />
                 </header>
                 <StoreProvider>
-                  <main className="flex-1 overflow-auto px-2">{children}</main>
+                  <main className="overflow-auto px-2 sm:flex-1">{children}</main>
                 </StoreProvider>
                 <footer className="text-center text-green-500">
                   &#169; indiflex SeniorCoding 2025

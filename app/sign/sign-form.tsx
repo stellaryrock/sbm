@@ -13,11 +13,7 @@ export default function SignForm() {
   const [isSignin, toggleSign] = useReducer((pre) => !pre, false);
   return (
     <>
-      {isSignin ? (
-        <SignIn toggleSign={toggleSign} />
-      ) : (
-        <SignUp toggleSign={toggleSign} />
-      )}
+      {isSignin ? <SignIn toggleSign={toggleSign} /> : <SignUp toggleSign={toggleSign} />}
     </>
   );
 }
@@ -40,10 +36,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   const passwdRef = useRef<HTMLInputElement>(null);
   const rememberRef = useRef<HTMLInputElement>(null);
 
-  const [validError, makeLogin, isPending] = useActionState(
-    authorize,
-    undefined,
-  );
+  const [validError, makeLogin, isPending] = useActionState(authorize, undefined);
 
   const makeLoginAction = async (formData: FormData) => {
     rememberMe();
@@ -107,12 +100,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           <Link href="/forgotpasswd">Forgot Password?</Link>
         </div>
 
-        <Button
-          type="submit"
-          variant={"primary"}
-          className="w-full"
-          disabled={isPending}
-        >
+        <Button type="submit" variant={"primary"} className="w-full" disabled={isPending}>
           {isPending ? "Signing..." : "Sign In"}
         </Button>
       </form>
@@ -164,12 +152,7 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           placeholder="your nickname.."
         />
 
-        <Button
-          type="submit"
-          variant={"primary"}
-          className="w-full"
-          disabled={isPending}
-        >
+        <Button type="submit" variant={"primary"} className="w-full" disabled={isPending}>
           {isPending ? (
             <>
               <LoaderPinwheelIcon className="animate-spin" /> "Signing Up..."

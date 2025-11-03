@@ -69,7 +69,7 @@ export const findMemberByIdWithCount = async (id: number | string) =>
       nickname: true,
       image: true,
       isadmin: true,
-      _count: { select: { Book: true, Mark: true } },
+      _count: { select: { Book: true, Mark: true, FollowBook: true } },
     },
     where: { id: Number(id) },
   });
@@ -89,15 +89,16 @@ export const findBookWithMarkById = async (id: number) =>
   prisma.book.findUnique({
     where: { id },
     include: {
+      FollowBook: {
+        select: { member: true },
+      },
       Mark: {
         include: {
           Likes: { select: { member: true } },
           Report: { select: { member: true } },
           Talk: true,
+          Member: { select: { id: true, nickname: true, image: true } },
         },
-      },
-      FollowBook: {
-        select: { member: true },
       },
     },
   });
@@ -112,5 +113,6 @@ export const findMarkWithCount = async (id: number) =>
       Likes: { select: { member: true } },
       Report: { select: { member: true } },
       Talk: true,
+      Member: { select: { id: true, image: true, nickname: true } },
     },
   });

@@ -18,7 +18,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAlerter } from "@/hooks/contexts/alerter";
 import type { BookData } from "@/lib/db";
 import type { ValidError } from "@/lib/validator";
-import { useRouter } from "next/navigation";
 import { useActionState, useState, type PropsWithChildren } from "react";
 import { deleteBook, saveBook } from "./book.action";
 
@@ -36,25 +35,28 @@ export default function BookDialog({
 }: PropsWithChildren<{
   book?: BookData;
 }>) {
+  console.log("🚀 ~ BookDialog ~ book:", book);
   // const [ispublic, setPublic] = useState(false);
   // const [withdel, setWithdel] = useState(false);
 
+  const { id: bookId, member: bookOwner } = book;
   const { confirm, alert, prompt } = useAlerter();
   const [isOpen, setOpen] = useState(false);
 
   const [validError, save, isPending] = useActionState(
     async (_: ValidError | undefined, formData: FormData) => {
       //formData.set("ispublic", ispublic ? "on" : "");
-      formData.set("id", String(book.id));
+      formData.set("id", String(bookId));
+      formData.set("bookOwner", String(bookOwner));
       const err = await saveBook(formData);
       if (err) return err;
 
-      router.refresh();
+      // router.refresh();
       setOpen(false);
     },
     undefined,
   );
-  const router = useRouter();
+
   const remove = async () => {
     // if (!confirm("Are u sure??")) return;
     const ret = await confirm({ title: "Are u sure??" });
@@ -71,7 +73,7 @@ export default function BookDialog({
       return;
     }
 
-    const err = await deleteBook(book.id);
+    const err = await deleteBook(bookId, bookOwner);
     if (err) {
       console.log("Err>>", err.id.errors[0]);
       setOpen(false);
@@ -79,7 +81,7 @@ export default function BookDialog({
       return;
     }
 
-    router.refresh();
+    // router.refresh();
     setOpen(false);
   };
   return (

@@ -17,8 +17,8 @@ type Props = {
 export default function Sign({ searchParams }: Props) {
   const { redirectTo } = use(searchParams);
   return (
-    <div className="grid h-full place-items-center">
-      <div className="flex w-full overflow-hidden rounded-md border shadow-md [&>div]:p-4">
+    <div className="container mx-auto grid h-full max-w-[700px] place-items-center">
+      <div className="flex w-full flex-col-reverse overflow-hidden rounded-md border shadow-md sm:flex-row [&>div]:p-4">
         <div className="flex-1">
           <div className="flex items-center gap-5">
             <h1 className="font-semibold text-2xl">Book & Mark</h1>
@@ -42,10 +42,9 @@ export default function Sign({ searchParams }: Props) {
               <h1 className="font-semibold text-2xl">Social BookMark,</h1>
               <h2 className="text-2xl">Record than Remember!</h2>
               <div>
-                Your go-to hub for sharing and discovering great and useful
-                websites. Connect with others, swap your favorite links, and
-                explore a world of useful resources — all powered by this
-                community
+                Your go-to hub for sharing and discovering great and useful websites.
+                Connect with others, swap your favorite links, and explore a world of
+                useful resources — all powered by this community
               </div>
             </div>
 

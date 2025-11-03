@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { validate, validateAsync } from "@/lib/validator";
+import { revalidateTag, unstable_cache } from "next/cache";
 import z from "zod";
 
 const checkLogin = async () => {
@@ -11,6 +12,30 @@ const checkLogin = async () => {
 
   return session.user;
 };
+
+export const getAllBooksByMember = async (member: number) =>
+  // ! revalidateTag 에 잘못된 값이 들어가도 확인이 어려움. 오타 조심, 빌드 후 실행해서 확인.
+  // ! SQL로 데이터 추가 후에 브라우저에서 해당 데이터가 보이면 캐시 안된 상태, revalidate 후에 추가된 데이터가 보여야 함.
+
+  unstable_cache(
+    async () =>
+      prisma.book.findMany({
+        where: { member },
+        include: {
+          FollowBook: { select: { member: true } },
+          Mark: {
+            include: {
+              Likes: { select: { member: true } },
+              Report: { select: { member: true } },
+              Talk: true,
+              Member: { select: { id: true, image: true, nickname: true } },
+            },
+          },
+        },
+      }),
+    [`member-books-${member}`], // ! cache-key
+    { tags: [`member-books-${member}`] }, // options
+  )();
 
 export const saveBook = async (formData: FormData) => {
   const user = await checkLogin();
@@ -33,6 +58,8 @@ export const saveBook = async (formData: FormData) => {
   if (err) return err;
 
   const id = Number(formData.get("id"));
+  const bookOwner = Number(formData.get("bookOwner"));
+
   const { id: userId, isadmin } = user;
   if (id) {
     await prisma.book.update({
@@ -53,9 +80,11 @@ export const saveBook = async (formData: FormData) => {
       },
     });
   }
+
+  revalidateTag(`member-books-${bookOwner}`);
 };
 
-export const deleteBook = async (id: number) => {
+export const deleteBook = async (id: number, bookOwner: number) => {
   const user = await checkLogin();
   // check exists
   const zobj = z
@@ -85,6 +114,8 @@ export const deleteBook = async (id: number) => {
   await prisma.book.delete({
     where: isadmin ? { id } : { id, member: Number(userId) },
   });
+
+  revalidateTag(`member-books-${bookOwner}`);
 };
 
 export const likesAndReportsWithFollows = async (member: number) => {
@@ -100,8 +131,9 @@ export const likesAndReportsWithFollows = async (member: number) => {
 
   const ifollows = await prisma.followBook.findMany({
     where: { member },
-    select: { book: true },
+    select: { book: true, Book: { select: { member: true } } },
   });
+  console.log("🚀 ~ likesAndReportsWithFollows ~ ifollows:", ifollows);
 
   return [ilikes, ireports, ifollows] as const;
 };
@@ -111,7 +143,7 @@ export const deleteMark = async (id: number, bookOwner: number) => {
 
   // check exists
   const mark = await prisma.mark.findUnique({
-    where: isadmin ? { id } : { id, maker: Number(userId) },
+    where: { id },
   });
 
   if (!mark) throw new Error("Mark Not Found!");
@@ -122,9 +154,33 @@ export const deleteMark = async (id: number, bookOwner: number) => {
   await prisma.mark.delete({
     where: { id },
   });
+
+  console.log("🚀 expire tag:", `member-books-${bookOwner}`);
+  revalidateTag(`member-books-${bookOwner}`);
 };
 
-export const toggleFollowBooks = async (book: number) => {
+export const toggleFollowBook = async (book: number, bookOwner: number) => {
+  const { id } = await checkLogin();
+  const member = Number(id);
+  const fb = await prisma.followBook.findUnique({
+    where: { book_member: { book, member } },
+  });
+
+  if (fb)
+    await prisma.followBook.delete({
+      where: { book_member: { book, member } },
+    });
+  else
+    await prisma.followBook.create({
+      data: { book, member },
+    });
+
+  console.log("🚀 expire tag:", `member-books-${bookOwner}`);
+  revalidateTag(`member-books-${bookOwner}`);
+  // revalidatePath(`/bookcase/${bookOwner}`);
+};
+
+export const toggleFollowBooks = async (book: number, bookOwner: number) => {
   const { id: userId } = await checkLogin();
   const member = Number(userId);
 
@@ -136,18 +192,22 @@ export const toggleFollowBooks = async (book: number) => {
   // if (book === 17) throw new Error();
 
   if (followCnt > 0)
-    return prisma.followBook.delete({
+    await prisma.followBook.delete({
       where: { book_member: { book, member } },
     });
   else
-    return prisma.followBook.create({
+    await prisma.followBook.create({
       data: { book, member },
     });
+
+  console.log("🚀 expire tag:", `member-books-${bookOwner}`);
+  revalidateTag(`member-books-${bookOwner}`);
 };
 
 export const toggleLikesOrReportMark = async (
   mark: number,
   type: "likes" | "reports",
+  bookOwner: number,
 ) => {
   const { id: userId } = await checkLogin();
   const member = Number(userId);
@@ -166,12 +226,15 @@ export const toggleLikesOrReportMark = async (
     : prisma.report.count(where));
 
   if (likesCnt > 0) {
-    return type === "likes"
+    await (type === "likes"
       ? prisma.likes.delete(whereMarkMember)
-      : prisma.report.delete(whereMarkMember);
+      : prisma.report.delete(whereMarkMember));
   } else {
-    return type === "likes"
+    await (type === "likes"
       ? prisma.likes.create({ data })
-      : prisma.report.create({ data });
+      : prisma.report.create({ data }));
   }
+
+  console.log("🚀 expire tag:", `member-books-${bookOwner}`);
+  revalidateTag(`member-books-${bookOwner}`);
 };

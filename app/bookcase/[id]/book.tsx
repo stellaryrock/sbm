@@ -12,10 +12,11 @@ import {
   HeartPlusIcon,
   MoreHorizontalIcon,
   PlusIcon,
+  ThumbsUpIcon,
 } from "lucide-react";
 import { use } from "react";
 import BookDialog from "./book-dialog";
-import FollowIcon from "./follow";
+import { default as FollowButton } from "./follow-button";
 import Mark from "./mark";
 
 type Props =
@@ -36,9 +37,19 @@ export default function Book({ id, book }: Props) {
       <h1 className="font-semibold text-lg text-muted-foreground">Book is not Found!</h1>
     );
 
-  const { id: bookId, title, remark, ispublic, member, withdel } = data;
+  const {
+    id: bookId,
+    title,
+    remark,
+    ispublic,
+    member,
+    withdel,
+    Mark: marks,
+    FollowBook: followBooks,
+  } = data;
   const session = use(auth());
   const isMine = session?.user.id === String(member);
+  const loginUserId = Number(session?.user.id);
 
   //const totalLikesCnt = book?.Mark.reduce((acc, mark) => acc + mark._count.Likes, 0);
 
@@ -50,14 +61,14 @@ export default function Book({ id, book }: Props) {
         )}
         <h1
           className={cn(
-            "flex items-center truncate p-2 font-medium text-xl tracking-tighter",
+            "items-center truncate p-2 font-medium text-xl tracking-tighter",
             ispublic
               ? "text-green-500 text-shadow-green-300"
               : "text-muted-foreground text-shadow-gray-300",
           )}
           title={remark || title}
         >
-          {!ispublic && <BookKeyIcon />}
+          {!ispublic && <BookKeyIcon className="inline" />}
           {title}
         </h1>
 
@@ -71,17 +82,26 @@ export default function Book({ id, book }: Props) {
             </Button>
           </BookDialog>
         ) : (
-          ispublic && <FollowIcon book={data} />
+          ispublic && (
+            <FollowButton
+              bookId={data.id}
+              bookOwner={member}
+              isActive={followBooks.map(({ member }) => member).includes(loginUserId)}
+            >
+              {followBooks.length}
+            </FollowButton>
+          )
         )}
       </div>
       <div className="max-h-full space-y-2 overflow-y-scroll rounded-lg pr-2 pb-3">
-        {book?.Mark.length ? (
-          book.Mark.map((mark) => (
+        {marks.length ? (
+          marks.map((mark) => (
             <Mark
               key={mark.id}
               mark={mark}
-              withdel={book.withdel}
-              bookOwner={book.member}
+              withdel={withdel}
+              bookOwner={member}
+              followBooks={followBooks.length}
             />
           ))
         ) : (
@@ -98,11 +118,18 @@ export default function Book({ id, book }: Props) {
           >
             <PlusIcon /> Add a Mark
           </Button>
+
           <div className="flex gap-2">
-            <IconLabel icon={<AlbumIcon />}>{book?.Mark.length}</IconLabel>
+            <IconLabel icon={<AlbumIcon />}>{marks.length}</IconLabel>
+            <IconLabel noti={"success"} icon={<ThumbsUpIcon />}>
+              {marks.reduce((acc, mark) => acc + mark.Likes.length, 0)}
+            </IconLabel>
             {ispublic && (
-              <IconLabel icon={<HeartPlusIcon className="text-red-400" />}>
-                {data.FollowBook.length}
+              <IconLabel
+                noti={"destructive"}
+                icon={<HeartPlusIcon className="text-red-400" />}
+              >
+                {followBooks.length}
               </IconLabel>
             )}
             {withdel && (

@@ -19,10 +19,10 @@ import {
 type ContextValueProps = {
   iLikedMarks: number[];
   iReportedMarks: number[];
-  iFollowedBooks: number[];
+  iFollowedBooks: FollowBook[];
   toggleLikes: (mark: MarkAllColumn) => void;
   toggleReports: (mark: MarkAllColumn) => void;
-  toggleFollows: (book: number) => void;
+  toggleFollows: (book: number, bookOwner: number) => void;
   // setMarks: (likes: number[], reports: number[]) => void;
 };
 
@@ -36,10 +36,15 @@ const StoreContext = createContext<ContextValueProps>({
   // setMarks: () => {},
 });
 
+type FollowBook = {
+  book: number;
+  bookOwner: number;
+};
+
 export function StoreProvider({ children }: PropsWithChildren) {
   const [iLikedMarks, setLikedMarks] = useState<number[]>([]);
   const [iReportedMarks, setRepotedMarks] = useState<number[]>([]);
-  const [iFollowedBooks, setFollowedBooks] = useState<number[]>([]);
+  const [iFollowedBooks, setFollowedBooks] = useState<FollowBook[]>([]);
   const { data: session } = useSession();
 
   const setMarks = useCallback((likes: number[], reports: number[]) => {
@@ -49,7 +54,7 @@ export function StoreProvider({ children }: PropsWithChildren) {
     setRepotedMarks(reports);
   }, []);
 
-  const setFollows = useCallback((follows: number[]) => {
+  const setFollows = useCallback((follows: FollowBook[]) => {
     setFollowedBooks(follows);
   }, []);
 
@@ -58,7 +63,7 @@ export function StoreProvider({ children }: PropsWithChildren) {
       type === "likes" ? [iLikedMarks, setLikedMarks] : [iReportedMarks, setRepotedMarks];
 
     const hasNow = state.includes(mark.id);
-    await toggleLikesOrReportMark(mark.id, type);
+    await toggleLikesOrReportMark(mark.id, type, mark.maker);
     // if (type === "likes") mark._count.Likes += hasNow ? -1 : 1;
     // else mark._count.Report += hasNow ? -1 : 1;
 
@@ -68,12 +73,13 @@ export function StoreProvider({ children }: PropsWithChildren) {
 
   const toggleLikes = (mark: MarkAllColumn) => toggleLikesOrReports(mark, "likes");
   const toggleReports = (mark: MarkAllColumn) => toggleLikesOrReports(mark, "reports");
-  const toggleFollows = async (book: number) => {
-    const hasNow = iFollowedBooks.includes(book);
-    await toggleFollowBooks(book);
+  const toggleFollows = async (book: number, bookOwner: number) => {
+    const hasNow = iFollowedBooks.mapBy("book").includes(book);
+    await toggleFollowBooks(book, bookOwner);
 
-    if (hasNow) setFollowedBooks(iFollowedBooks.filter((id) => id !== book));
-    else setFollowedBooks([...iFollowedBooks, book]);
+    if (hasNow)
+      setFollowedBooks(iFollowedBooks.filter(({ book: bookId }) => bookId !== book));
+    else setFollowedBooks([...iFollowedBooks, { book, bookOwner }]);
   };
 
   useEffect(() => {
@@ -86,7 +92,7 @@ export function StoreProvider({ children }: PropsWithChildren) {
           reports.map(({ mark }) => mark),
         );
 
-        setFollows(ifollows.mapBy("book"));
+        setFollows(ifollows.map(({ book, Book }) => ({ book, bookOwner: Book.member })));
       });
     }
   }, [session?.user, setMarks, setFollows]);

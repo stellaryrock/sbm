@@ -2,11 +2,12 @@ import IconLabel from "@/components/icon-label";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/user-avatar";
 import { auth } from "@/lib/auth";
-import prisma, { findMemberByIdWithCount } from "@/lib/db";
+import { findMemberByIdWithCount } from "@/lib/db";
 import { AlbumIcon, BookMarkedIcon, HeartPlusIcon, PlusIcon } from "lucide-react";
 import { use } from "react";
 import Book from "./book";
 import BookDialog from "./book-dialog";
+import { getAllBooksByMember } from "./book.action";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -20,24 +21,7 @@ export default function BookcaseNickname({ params }: Props) {
   const mbr = use(findMemberByIdWithCount(id));
   if (!mbr) return <h1 className="text-2xl">User Not Found</h1>;
 
-  const books = use(
-    prisma.book.findMany({
-      where: { member: Number(id) },
-      include: {
-        FollowBook: { select: { member: true } },
-        Mark: {
-          include: {
-            // select count(*) from Likes where book = parent.book;
-            // _count: { select: { Likes: true, Report: true, Talk: true } },
-            // Likes: true, // select * from Likes where mark = parent.mark;
-            Likes: { select: { member: true } },
-            Report: { select: { member: true } },
-            Talk: true,
-          },
-        },
-      },
-    }),
-  );
+  const books = use(getAllBooksByMember(Number(id)));
 
   const totalFollowsCnt = books.reduce((acc, cur) => acc + cur.FollowBook.length, 0);
 
@@ -52,24 +36,34 @@ export default function BookcaseNickname({ params }: Props) {
       <h1 className="flex items-center justify-between font-semibold text-2xl">
         <div className="flex items-center">
           {/* <UserAvatar id={id} withName={true} /> */}
-          {mbr && <UserAvatar member={mbr} withName={true} />}
+          {mbr && <UserAvatar member={mbr} withName={true} side="right" />}
           <span className="ml-2 font-medium text-green-600">Bookcase</span>
         </div>
         <span className="flex gap-3 text-lg">
           <IconLabel icon={<BookMarkedIcon />}>{mbr._count.Book}</IconLabel>
-          <IconLabel icon={<AlbumIcon />} noti="primary">
+          <IconLabel icon={<AlbumIcon />} noti="secondary">
             {mbr._count.Mark}
           </IconLabel>
-          <IconLabel icon={<HeartPlusIcon />} noti="destructive">
+          <IconLabel icon={<HeartPlusIcon />} noti="success">
             {totalFollowsCnt}
           </IconLabel>
         </span>
       </h1>
 
       <div className="flex gap-3 overflow-x-auto py-2">
-        {books.map((book) => (
-          <Book key={book.id} book={book} />
-        ))}
+        {books.length ? (
+          books.map(
+            (book) =>
+              (book.ispublic || isMyBookcase) && <Book key={book.id} book={book} />,
+          )
+        ) : (
+          <h1 className="flex h-full w-72 flex-shrink-0 flex-col rounded-lg bg-slate-200 p-3 pl-2 text-xl dark:bg-muted">
+            <div className="rounded-lg bg-slate-100 p-3 font-medium text-muted-foreground">
+              There is no book.
+            </div>
+          </h1>
+        )}
+
         {isMyBookcase && (
           <BookDialog>
             <Button

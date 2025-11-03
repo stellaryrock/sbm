@@ -41,7 +41,7 @@ export default function CheckSwitch({
   // biome-ignore lint/correctness/useExhaustiveDependencies: <value not changed when 'on'>
   useEffect(() => {
     // type === "checkbox" && console.log("🚀 ~ CheckSwitch ~ value:", value);
-    setChecked(!!value);
+    if (value) setChecked(!!value);
   }, [error]);
 
   return (

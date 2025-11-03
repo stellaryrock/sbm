@@ -1,6 +1,6 @@
+import UserAvatar from "@/components/user-avatar";
 import { auth } from "@/lib/auth";
-import { DummyProfile } from "@/lib/utils";
-import Image from "next/image";
+import { existsFile } from "@/lib/validator";
 import Link from "next/link";
 
 export default async function My() {
@@ -9,13 +9,14 @@ export default async function My() {
   return (
     <>
       {session?.user ? (
-        <Link href="/my" className="relative h-[40px] w-[40px] overflow-hidden">
-          <Image
-            className="rounded-full"
-            src={session?.user?.image || DummyProfile}
-            alt={session?.user.name || "guest"}
-            fill
-            unoptimized={process.env.NODE_ENV === "development"}
+        <Link href="/my" className="relative overflow-hidden rounded-full border">
+          <UserAvatar
+            member={{
+              id: Number(session.user.id),
+              nickname: session.user.name || "",
+              image: existsFile(session.user.image),
+              // image: session.user.image ?? DummyProfile.src
+            }}
           />
         </Link>
       ) : (

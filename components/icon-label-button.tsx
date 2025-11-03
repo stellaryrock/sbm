@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { JSX, MouseEvent, PropsWithChildren } from "react";
-import IconLabel from "./icon-label";
+import IconLabel, { type IconNoti } from "./icon-label";
 import ToolTip from "./tool-tip";
 import { Button } from "./ui/button";
 
@@ -12,6 +12,7 @@ type Props = {
   isActive?: boolean;
   isDanger?: boolean;
   tooltip?: string;
+  noti?: IconNoti;
   disabled?: boolean;
 };
 
@@ -21,6 +22,7 @@ export default function IconLabelButton({
   isActive,
   isDanger,
   tooltip,
+  noti,
   disabled,
   children,
 }: PropsWithChildren<Props>) {
@@ -35,12 +37,13 @@ export default function IconLabelButton({
         variant={"ghost"}
         disabled={disabled}
         className={cn(
-          "h-[80%] px-1 py-1 dark:hover:bg-muted-foreground/30",
+          "h-[80%] dark:hover:bg-muted-foreground/30",
           isDanger && "text-destructive",
-          { "px-2": !!children || children === 0 },
+          noti ? "px2" : "px-1 py-1",
+          { "px-2": !children },
         )}
       >
-        <IconLabel icon={icon} isActive={isActive} isDanger={isDanger}>
+        <IconLabel icon={icon} noti={noti} isActive={isActive} isDanger={isDanger}>
           {children}
         </IconLabel>
       </Button>
