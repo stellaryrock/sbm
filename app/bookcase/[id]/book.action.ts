@@ -14,9 +14,6 @@ const checkLogin = async () => {
 };
 
 export const getAllBooksByMember = async (member: number) =>
-  // ! revalidateTag 에 잘못된 값이 들어가도 확인이 어려움. 오타 조심, 빌드 후 실행해서 확인.
-  // ! SQL로 데이터 추가 후에 브라우저에서 해당 데이터가 보이면 캐시 안된 상태, revalidate 후에 추가된 데이터가 보여야 함.
-
   unstable_cache(
     async () =>
       prisma.book.findMany({
@@ -234,6 +231,34 @@ export const toggleLikesOrReportMark = async (
       ? prisma.likes.create({ data })
       : prisma.report.create({ data }));
   }
+
+  console.log("🚀 expire tag:", `member-books-${bookOwner}`);
+  revalidateTag(`member-books-${bookOwner}`);
+};
+
+export const createMark = async (
+  formData: FormData,
+  bookId: number,
+  bookOwner: number,
+) => {
+  const { id: userId } = await checkLogin();
+  const zobj = z.object({
+    title: z.string().min(1),
+    link: z.url(),
+    image: z.string().optional(),
+    descript: z.string().optional(),
+  });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  await prisma.mark.create({
+    data: {
+      ...data,
+      book: bookId,
+      maker: Number(userId),
+    },
+  });
 
   console.log("🚀 expire tag:", `member-books-${bookOwner}`);
   revalidateTag(`member-books-${bookOwner}`);

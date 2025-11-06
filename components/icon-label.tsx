@@ -34,7 +34,7 @@ export default function IconLabel({
 
   const cLen = children?.toString().length ?? 1;
   const transX = cLen > 1 ? cLen * 0.5 : cLen;
-  const truncated = cLen > 3 && `${divide(Number(children), 1000, 1)}K`;
+  const abbreviatedVal = cLen > 3 && `${divide(Number(children), 1000, 1)}K`;
 
   return (
     <div className="relative flex items-center text-muted-foreground">
@@ -50,9 +50,12 @@ export default function IconLabel({
               "bg-destructive": noti === "destructive",
               "bg-green-500": noti === "success",
             },
+            {
+              "px-0.5": abbreviatedVal,
+            },
           )}
         >
-          {truncated || children}
+          {abbreviatedVal || children}
         </small>
       ) : (
         children

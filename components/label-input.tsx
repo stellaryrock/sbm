@@ -1,13 +1,7 @@
 /** biome-ignore-all lint/correctness/useExhaustiveDependencies: useEffect dep-arr */
 "use client";
 
-import {
-  type ComponentProps,
-  type RefObject,
-  useEffect,
-  useId,
-  useRef,
-} from "react";
+import { type ComponentProps, type RefObject, useEffect, useId, useRef } from "react";
 import { cn } from "../lib/utils";
 import type { ValidError } from "../lib/validator";
 import { Input } from "./ui/input";
@@ -37,8 +31,7 @@ export default function LabelInput({
   const uniqName = useId();
   const inpRef = useRef<HTMLInputElement>(null);
   const err = !!error && !!name && error[name] ? error[name].errors : [];
-  const val =
-    !!error && !!name && error[name] ? error[name].value?.toString() : "";
+  const val = !!error && !!name && error[name] ? error[name].value?.toString() : "";
 
   useEffect(() => {
     if (!focus && !err.length) return;
@@ -61,10 +54,7 @@ export default function LabelInput({
           ref={ref || inpRef}
           defaultValue={val || defaultValue || ""}
           placeholder={placeholder || ""}
-          className={cn(
-            "bg-gray-100 font-normal focus:bg-white",
-            inputClassName,
-          )}
+          className={cn("bg-gray-100 font-normal focus:bg-white", inputClassName)}
           {...props}
         />
         {err.map((e) => (

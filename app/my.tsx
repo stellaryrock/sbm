@@ -5,10 +5,11 @@ import Link from "next/link";
 
 export default async function My() {
   const session = await auth();
+  const didLogin = !!session?.user;
 
   return (
     <>
-      {session?.user ? (
+      {didLogin ? (
         <Link href="/my" className="relative overflow-hidden rounded-full border">
           <UserAvatar
             member={{

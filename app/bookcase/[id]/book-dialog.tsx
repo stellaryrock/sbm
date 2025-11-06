@@ -35,7 +35,6 @@ export default function BookDialog({
 }: PropsWithChildren<{
   book?: BookData;
 }>) {
-  console.log("🚀 ~ BookDialog ~ book:", book);
   // const [ispublic, setPublic] = useState(false);
   // const [withdel, setWithdel] = useState(false);
 

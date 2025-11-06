@@ -18,6 +18,7 @@ import { use } from "react";
 import BookDialog from "./book-dialog";
 import { default as FollowButton } from "./follow-button";
 import Mark from "./mark";
+import MarkDialog from "./mark-dialog";
 
 type Props =
   | {
@@ -112,12 +113,14 @@ export default function Book({ id, book }: Props) {
       </div>
       {isMine && (
         <div className="my-1 flex items-center justify-between pr-2 font-medium">
-          <Button
-            variant={"ghost"}
-            className="flex w-[60%] justify-start font-semibold text-lg hover:bg-slate-300"
-          >
-            <PlusIcon /> Add a Mark
-          </Button>
+          <MarkDialog book={data}>
+            <Button
+              variant={"ghost"}
+              className="flex w-[60%] justify-start font-semibold text-lg hover:bg-slate-300"
+            >
+              <PlusIcon /> Add a Mark
+            </Button>
+          </MarkDialog>
 
           <div className="flex gap-2">
             <IconLabel icon={<AlbumIcon />}>{marks.length}</IconLabel>
