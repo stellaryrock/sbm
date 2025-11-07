@@ -45,7 +45,7 @@ export default function RootLayout({
             <AlerterProvider>
               <div className="flex h-screen flex-col">
                 {/* 모바일 헤더 겹침 */}
-                <header className="flex justify-between border-b px-2">
+                <header className="flex justify-between border-b px-2 dark:border-foreground">
                   <Link
                     href="/"
                     className="flex items-center font-semibold text-3xl text-green-500 tracking-tight"

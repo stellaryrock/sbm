@@ -15,7 +15,7 @@ export function KakaoLoginButton({ redirectTo }: Props) {
     <Button
       onClick={makeLogin}
       variant="outline"
-      className="h-12 w-full gap-2 bg-[#FEE500] text-black hover:bg-[#ecd800]"
+      className="h-12 w-full gap-2 bg-[#FEE500] text-black hover:bg-[#ecd800] dark:bg-[#FEE500] dark:hover:bg-[#ecd800]"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
