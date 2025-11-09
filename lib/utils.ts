@@ -65,9 +65,13 @@ Array.prototype.mapBy = function <T, P extends keyof T>(this: T[], prop: P): T[P
 //   return `${Math.floor((this * precisionFactor) / devisor) / precisionFactor}${suffix}`;
 // };
 
-export function divide(value: number, divisor: number, precision: number = 0): number {
-  if (Number.isNaN(value)) return value;
+// export function divide(
+//   value: number,
+//   divisor: number,
+//   precision: number = 0,
+// ) {
+//   if (Number.isNaN(value)) return value;
 
-  const precisionFactor = 10 ** precision;
-  return Math.floor((value * precisionFactor) / divisor) / precisionFactor;
-}
+//   const precisionFactor = 10 ** precision;
+//   return Math.floor((value * precisionFactor) / divisor) / precisionFactor;
+// }

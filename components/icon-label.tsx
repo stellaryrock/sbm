@@ -1,6 +1,6 @@
 "use client";
 
-import { cn, divide } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { cloneElement, type JSX, type PropsWithChildren } from "react";
 
 type Prop = {
@@ -34,7 +34,7 @@ export default function IconLabel({
 
   const cLen = children?.toString().length ?? 1;
   const transX = cLen > 1 ? cLen * 0.5 : cLen;
-  const abbreviatedVal = cLen > 3 && `${divide(Number(children), 1000, 1)}K`;
+  // const abbreviatedVal = cLen > 3 && `${divide(Number(children), 1000, 1)}K`;
 
   return (
     <div className="relative flex items-center text-muted-foreground">
@@ -42,7 +42,7 @@ export default function IconLabel({
       {noti ? (
         <small
           className={cn(
-            "absolute top-0 right-0 min-w-5 rounded-full p-0 text-center text-sm text-white tracking-tighter ring-1",
+            "absolute top-0 right-0 min-w-4 rounded-full p-0 text-center text-white text-xs tracking-tighter ring-1",
             `translate-x-${Math.min(transX, 5)} translate-y-[-0.4rem]`,
             {
               "bg-primary-foreground": noti === "default",
@@ -50,12 +50,13 @@ export default function IconLabel({
               "bg-destructive": noti === "destructive",
               "bg-green-500": noti === "success",
             },
-            {
-              "px-0.5": abbreviatedVal,
-            },
+            // {
+            //   "px-0.5": abbreviatedVal,
+            // },
           )}
         >
-          {abbreviatedVal || children}
+          {/* {abbreviatedVal || children} */}
+          {children}
         </small>
       ) : (
         children

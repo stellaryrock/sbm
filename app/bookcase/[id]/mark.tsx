@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import UserAvatar from "@/components/user-avatar";
 import { useAlerter } from "@/hooks/contexts/alerter";
 import type { MarkAllColumn } from "@/lib/db";
+import { cn } from "@/lib/utils";
 import {
   BookmarkXIcon,
   HatGlassesIcon,
@@ -17,6 +18,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useOptimistic, useTransition, type MouseEvent } from "react";
 import { deleteMark, toggleLikesOrReportMark } from "./book.action";
+import MarkDialog from "./mark-dialog";
 
 export default function Mark({
   mark,
@@ -26,18 +28,16 @@ export default function Mark({
 }: {
   mark: MarkAllColumn;
   bookOwner: number;
-  withdel: boolean;
   followBooks?: number;
+  withdel: boolean;
 }) {
   const { data: session } = useSession();
   const userId = Number(session?.user.id);
   const hasWriteAuth = userId === mark.maker || userId === bookOwner;
-
-  // const [likes, setLikes] = useState(mark.Likes);
   const [likes, setLikes] = useOptimistic(mark.Likes);
   const [reports, setReports] = useOptimistic(mark.Report);
-  const [isLikesPending, startLikeTransition] = useTransition();
-  const [isReportsPending, startReportTransition] = useTransition();
+  const [isLikePending, startTransitionLike] = useTransition();
+  const [isReportPending, startTransitionReport] = useTransition();
   const [isRemovePending, startRemoveTransition] = useTransition();
 
   // const { iLikedMarks, iReportedMarks, toggleLikes, toggleReports } = useStore();
@@ -63,14 +63,14 @@ export default function Mark({
       : [...col, { member: userId }];
 
     const startTransition =
-      type === "likes" ? startLikeTransition : startReportTransition;
+      type === "likes" ? startTransitionLike : startTransitionReport;
 
     startTransition(async () => {
       try {
         (type === "likes" ? setLikes : setReports)(dbData);
         await toggleLikesOrReportMark(mark.id, type, bookOwner);
 
-        // if (type === "likes") mark.Likes = dbData;
+        // if (type === 'likes') mark.Likes = dbData;
         // else mark.Report = dbData;
         // router.refresh();
       } catch (error) {
@@ -82,6 +82,27 @@ export default function Mark({
 
   const likeMark = (e: MouseEvent<HTMLButtonElement>) => likeOrReportMark(e, "likes");
   const reportMark = (e: MouseEvent<HTMLButtonElement>) => likeOrReportMark(e, "reports");
+
+  // Link: MouseEventHandler<HTMLAnchorElement>, Button: MouseEvent<HTMLButtonElement>
+  // event.nativeEvent PointerEvent / MouseEvent?
+  const openLinkTrigger = async (e?: MouseEvent) => {
+    // BaseSyntheticEvent<globalThis.MouseEvent, EventTarget & Element, EventTarget>.target: EventTarget | undefined
+    if (e?.target && e?.target instanceof HTMLButtonElement) return;
+    console.log("openLinkTrigger event:", e);
+    /*
+      SyntheticBaseEvent {
+      _reactName: 'onClick', 
+      _targetInst: null, 
+      type: 'click', 
+      nativeEvent: PointerEvent, 
+      target: div.relative.flex.items-center.text-muted-foreground, 
+      …}
+    */
+
+    if (!withdel || mark.Likes.length) return;
+
+    removeMark();
+  };
 
   const removeMark = async (e?: MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
@@ -95,19 +116,12 @@ export default function Mark({
     startRemoveTransition(async () => {
       try {
         await deleteMark(mark.id, bookOwner);
-        //router.refresh();
+        // router.refresh();
       } catch (error) {
         console.log(error);
         await alert({ title: (error as Error).message });
       }
     });
-  };
-
-  const openLinkTrigger = async () => {
-    // 좋아요 한 마크는 바로 삭제에서 제외!
-    if (!withdel || mark.Likes.length) return;
-
-    removeMark();
   };
 
   return (
@@ -116,13 +130,13 @@ export default function Mark({
         href={mark.link}
         onClick={openLinkTrigger}
         target="_blank"
-        rel="noopener noreferrer" // target='_blank' 의 취약점 보완
+        rel="noopener noreferrer"
         className="mark"
       >
         <div className="flex items-center gap-2">
           <Avatar className="h-16 w-auto max-w-[50%] rounded-lg group-hover:ring-2 group-hover:ring-primary">
             <AvatarImage
-              src={mark.image || `https://avatar.vercel.sh/${mark.title}}`}
+              src={mark.image || `https://avatar.vercel.sh/${mark.title}`}
               className="aspect-auto w-auto"
             />
             <AvatarFallback className="w-full">
@@ -130,7 +144,7 @@ export default function Mark({
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-1 flex-col [&>*]:truncate">
+          <div className="flex flex-col overflow-hidden [&>*]:truncate">
             <h1 className="text-lg dark:text-black/70" title={mark.title}>
               {process.env.NODE_ENV === "development" && (
                 <small className="text-muted-foreground">{mark.id}</small>
@@ -158,14 +172,19 @@ export default function Mark({
           </div>
         </div>
         <Separator className="mt-2 mb-0.5 bg-muted-foreground/30" />
-        <div className="flex items-center justify-between text-sm">
+        <div
+          className={cn(
+            "flex items-center text-sm",
+            hasWriteAuth ? "justify-between" : "justify-around",
+          )}
+        >
           <IconLabelButton
             icon={<ThumbsUpIcon />}
             onClick={likeMark}
             // onClick={(e) => likeOrReportMark(e, "likes")}
             // isActive={iLikedMarks.includes(mark.id)}
             isActive={iLiked()}
-            disabled={isLikesPending}
+            disabled={isLikePending}
           >
             {likes.length}
           </IconLabelButton>
@@ -177,20 +196,25 @@ export default function Mark({
             onClick={reportMark}
             isDanger
             isActive={iReported()}
-            disabled={isReportsPending}
+            disabled={isReportPending}
           >
             {reports.length}
           </IconLabelButton>
+
           {hasWriteAuth && (
-            <IconLabelButton
-              icon={<BookmarkXIcon className="size-5" />}
-              onClick={removeMark}
-              disabled={isRemovePending}
-              tooltip="Delete this right away"
-              isDanger
-            />
+            <>
+              <IconLabelButton
+                onClick={removeMark}
+                icon={<BookmarkXIcon className="size-5" />}
+                tooltip="Delete this right away"
+                isDanger
+                disabled={isRemovePending}
+              />
+              <MarkDialog mark={mark}>
+                <IconLabelButton icon={<MoreHorizontalIcon />} />
+              </MarkDialog>
+            </>
           )}
-          <IconLabelButton icon={<MoreHorizontalIcon />} />
         </div>
       </Link>
     </div>

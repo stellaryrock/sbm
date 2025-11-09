@@ -1,12 +1,13 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ValidError } from "@/lib/validator";
-import type { ComponentProps } from "react";
+import type { ComponentProps, RefObject } from "react";
 
 type LabelTextareaProps = {
   label: string;
   name?: string;
   defaultValue?: string;
+  ref?: RefObject<HTMLTextAreaElement>;
   error?: ValidError;
 };
 
@@ -14,6 +15,7 @@ export default function LabelTextarea({
   label,
   name,
   defaultValue,
+  ref,
   error,
   ...props
 }: LabelTextareaProps & ComponentProps<typeof Textarea>) {
@@ -25,7 +27,12 @@ export default function LabelTextarea({
       <Label className="font-semibold text-sm capitalize" htmlFor="descript">
         {label}
       </Label>
-      <Textarea name={name} defaultValue={value?.toString() || defaultValue} {...props} />
+      <Textarea
+        name={name}
+        ref={ref}
+        defaultValue={value?.toString() || defaultValue}
+        {...props}
+      />
       {errors.map((err) => (
         <small key={err} className="ml-1 text-red-400">
           {err}
