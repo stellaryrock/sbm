@@ -29,6 +29,7 @@ import {
   useActionState,
   useRef,
   useState,
+  type KeyboardEvent,
   type MouseEvent,
   type PropsWithChildren,
 } from "react";
@@ -45,10 +46,20 @@ export default function MarkDialog({
     descript: "",
     maker: 0,
   },
+  book,
   children,
-}: PropsWithChildren<{
-  mark?: MarkData;
-}>) {
+}: PropsWithChildren<
+  | {
+      //* for <Edit Mark>
+      mark: MarkData;
+      book?: undefined;
+    }
+  | {
+      //* for <Create Mark>
+      mark?: undefined;
+      book: number;
+    }
+>) {
   const { confirm, alert } = useAlerter();
 
   const [isOpen, setOpen] = useState(false);
@@ -63,7 +74,7 @@ export default function MarkDialog({
       // formData.set('ispublic', ispublic ? 'on' : '');
 
       formData.set("id", String(mark.id));
-      formData.set("book", String(mark.book));
+      formData.set("book", String(mark.book || book));
       const img = imgUpRef.current?.getSrc();
       if (img) formData.set("image", img);
 
@@ -84,6 +95,10 @@ export default function MarkDialog({
     console.log("DialogContent onClick e:", e);
     // e.stopPropagation();
     // e.preventDefault();
+  };
+
+  const keyDownEnterHandler = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") scrap();
   };
 
   const callSave = () => {
@@ -160,6 +175,7 @@ export default function MarkDialog({
                 <InputGroup>
                   <InputGroupInput
                     name={"link"}
+                    onKeyDown={keyDownEnterHandler}
                     ref={linkRef}
                     defaultValue={mark.link}
                     placeholder="Link(URL)..."

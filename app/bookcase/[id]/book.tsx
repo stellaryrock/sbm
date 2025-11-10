@@ -104,7 +104,7 @@ export default function Book({ id, book }: Props) {
       </div>
       {isMine && (
         <div className="my-1 flex items-center justify-between pr-2 font-medium">
-          <MarkDialog>
+          <MarkDialog book={bookId}>
             <Button
               variant={"ghost"}
               className="flex rounded-full font-semibold text-lg hover:bg-muted-foreground/30 dark:hover:bg-muted-foreground/30"
