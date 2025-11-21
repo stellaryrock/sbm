@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10MB",
     },
+    typedEnv: true,
   },
   images: {
     remotePatterns: [
@@ -20,6 +21,7 @@ const nextConfig: NextConfig = {
       { hostname: "localhost", port: "3000" },
     ],
   },
+  typedRoutes: true,
 };
 
 export default nextConfig;

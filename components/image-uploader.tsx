@@ -26,7 +26,7 @@ type Props = {
   // changeImage?: (formData: FormData) => UpdateProfileImageReturn;
   changeImage?: (formData: FormData) => unknown;
   isNotProfile?: boolean;
-  ref: ForwardedRef<ImageUploaderHandler>;
+  ref?: ForwardedRef<ImageUploaderHandler>;
 };
 
 export default function ImageUploader({

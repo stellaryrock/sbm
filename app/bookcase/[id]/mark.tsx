@@ -84,17 +84,16 @@ export default function Mark({
   const reportMark = (e: MouseEvent<HTMLButtonElement>) => likeOrReportMark(e, "reports");
 
   // Link: MouseEventHandler<HTMLAnchorElement>, Button: MouseEvent<HTMLButtonElement>
-  // event.nativeEvent PointerEvent / MouseEvent?
   const openLinkTrigger = async (e?: MouseEvent) => {
     // BaseSyntheticEvent<globalThis.MouseEvent, EventTarget & Element, EventTarget>.target: EventTarget | undefined
     if (e?.target && e?.target instanceof HTMLButtonElement) return;
-    console.log("openLinkTrigger event:", e);
     /*
+    console.log("openLinkTrigger event:", e);
       SyntheticBaseEvent {
       _reactName: 'onClick', 
       _targetInst: null, 
       type: 'click', 
-      nativeEvent: PointerEvent, 
+      nativeEvent: PointerEvent,  // event.nativeEvent PointerEvent / MouseEvent
       target: div.relative.flex.items-center.text-muted-foreground, 
       …}
     */
@@ -124,10 +123,13 @@ export default function Mark({
     });
   };
 
+  const link = mark.link.startsWith("https://") ? mark.link : `https://${mark.link}`;
+  const href = new URL(link);
+
   return (
     <div className="group rounded-lg bg-white px-2 pt-2 pb-0.5 shadow-md hover:bg-slate-50 hover:shadow-lg">
       <Link
-        href={mark.link}
+        href={href}
         onClick={openLinkTrigger}
         target="_blank"
         rel="noopener noreferrer"
